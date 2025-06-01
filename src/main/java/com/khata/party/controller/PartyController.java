@@ -26,17 +26,6 @@ public class PartyController {
     @Operation(
             description = "Get endpoint for party",
             summary = "This is the summary for the party get endpoint"
-            //If responses are required then
-//            responses = {
-//                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-//                            description = "Success",
-//                            responseCode = "200"
-//                    ),
-//                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-//                            description = "Unauthorized",
-//                            responseCode = "403"
-//                    )
-//            }
     )
     @PostMapping("/")
     @ResponseStatus(HttpStatus.CREATED)
