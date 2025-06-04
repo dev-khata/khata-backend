@@ -26,19 +26,19 @@ public class AuthController {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ApiResponse<?>> registerUser(@Valid @RequestBody UserDTO userDTO) {
-        UserDTO registerUser = this.userService.createUser(userDTO);
+        UserDTO registerUser = userService.createUser(userDTO);
         ApiResponse<UserDTO> response = new ApiResponse<>(registerUser, HttpStatus.CREATED.value(), "User Registered Successfully");
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/user-login")
     public ResponseEntity<ApiResponse<?>> loginUser(@Valid @RequestBody JwtAuthRequest jwtAuthRequest) {
-        User user = this.authService.findUserEntityByEmail(jwtAuthRequest.getUsername());
+        User user = authService.findUserEntityByEmail(jwtAuthRequest.getUsername());
         if (!user.isVerified()) {
-            UserDTO userDTO = this.authService.mapUserEntityToDTO(user);
+            UserDTO userDTO = authService.mapUserEntityToDTO(user);
             return ResponseEntity.ok(new ApiResponse<>(userDTO, HttpStatus.FORBIDDEN.value(), "Your account is not verified. Please verify your email before logging in"));
         } else {
-            JwtAuthResponse jwtAuthResponse = this.authService.authenticateUserAndGenerateToken(jwtAuthRequest);
+            JwtAuthResponse jwtAuthResponse = authService.authenticateUserAndGenerateToken(jwtAuthRequest);
             return ResponseEntity.ok(new ApiResponse<>(jwtAuthResponse, HttpStatus.OK.value()));
         }
     }

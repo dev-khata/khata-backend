@@ -22,14 +22,14 @@ public class ProductController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ApiResponse<ProductDTO>> createProduct(@Valid @RequestBody ProductDTO productDTO){
-        ProductDTO product = this.productService.createProduct(productDTO);
+        ProductDTO product = productService.createProduct(productDTO);
         ApiResponse<ProductDTO> response = new ApiResponse<>(product, HttpStatus.CREATED.value(), "Product Created Successfully");
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<ProductDTO>>> getProducts(Pageable pageable){
-        Page<ProductDTO> product = this.productService.getProducts(pageable);
+        Page<ProductDTO> product = productService.getProducts(pageable);
         return ResponseEntity.ok(new ApiResponse<>(product, HttpStatus.OK.value()));
     }
 
@@ -37,20 +37,20 @@ public class ProductController {
     public ResponseEntity<ApiResponse<ProductDTO>> updateProduct(
             @Valid @RequestBody ProductDTO productDTO,
             @PathVariable Integer productId){
-        ProductDTO updatedProduct = this.productService.updateProduct(productDTO, productId);
+        ProductDTO updatedProduct = productService.updateProduct(productDTO, productId);
         ApiResponse<ProductDTO> response = new ApiResponse<>(updatedProduct, HttpStatus.OK.value(), "Product Updated Successfully");
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{productId}")
     public ResponseEntity<ApiResponse<ProductDTO>> getProductDetails(@PathVariable Integer productId){
-        ProductDTO productDTO = this.productService.getProductById(productId);
+        ProductDTO productDTO = productService.getProductById(productId);
         return ResponseEntity.ok(new ApiResponse<>(productDTO, HttpStatus.OK.value()));
     }
 
     @DeleteMapping("/{productId}")
     public ResponseEntity<ApiResponse<Void>> deleteProduct(@PathVariable Integer productId){
-        this.productService.deleteProduct(productId);
+        productService.deleteProduct(productId);
         return ResponseEntity.ok(new ApiResponse<>(null, HttpStatus.OK.value() ,"Product Deleted Successfully"));
     }
 }

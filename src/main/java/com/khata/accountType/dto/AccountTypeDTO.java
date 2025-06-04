@@ -1,6 +1,6 @@
 package com.khata.accountType.dto;
 
-import com.khata.accountType.entity.AccountCategory;
+import com.khata.accountType.entity.enums.AccountCategoryType;
 import com.khata.accountType.entity.enums.TransactionType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -13,8 +13,8 @@ import lombok.Setter;
 @Setter
 public class AccountTypeDTO {
 
-    @NotNull(message = "Account category cannot be null.")
-    private AccountCategory category;
+    @NotNull(message = "Account type cannot be null.")
+    private AccountCategoryType name;
 
     @NotNull(message = "Transaction type cannot be null.")
     private TransactionType transactionType;

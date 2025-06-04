@@ -3,7 +3,8 @@ package com.khata.accountType.controller;
 import com.khata.accountType.dto.AccountTypeDTO;
 import com.khata.accountType.services.AccountTypeService;
 import com.khata.payload.ApiResponse;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import com.khata.payload.PaginationResponse;
+import com.khata.utils.PaginationUtil;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,9 +30,11 @@ public class AccountTypeController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<AccountTypeDTO>>> getAccountTypes(Pageable pageable){
+    public ResponseEntity<ApiResponse<PaginationResponse<AccountTypeDTO>>> getAccountTypes(Pageable pageable){
         Page<AccountTypeDTO> accountTypeDTOPage = accountTypeService.getAccountTypes(pageable);
-        return ResponseEntity.ok(new ApiResponse<>(accountTypeDTOPage, HttpStatus.OK.value()));
+        PaginationResponse<AccountTypeDTO> paginationPayload = PaginationUtil.buildPaginationResponse(accountTypeDTOPage);
+        ApiResponse<PaginationResponse<AccountTypeDTO>> response = new ApiResponse<>(paginationPayload, HttpStatus.OK.value());
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{accountTypeId}")
@@ -44,14 +47,14 @@ public class AccountTypeController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/accountTypeId")
+    @GetMapping("/{accountTypeId}")
     public ResponseEntity<ApiResponse<AccountTypeDTO>> getAccountTypeDetails(
             @PathVariable Integer accountTypeId){
         AccountTypeDTO accountTypeDTO = accountTypeService.getAccountTypeById(accountTypeId);
         return ResponseEntity.ok(new ApiResponse<>(accountTypeDTO,HttpStatus.OK.value()));
     }
 
-    @DeleteMapping("/{}accountTypeId")
+    @DeleteMapping("/{accountTypeId}")
     public ResponseEntity<ApiResponse<Void>> deleteAccountTypeById(
             @PathVariable Integer accountTypeId){
         accountTypeService.deleteAccountType(accountTypeId);

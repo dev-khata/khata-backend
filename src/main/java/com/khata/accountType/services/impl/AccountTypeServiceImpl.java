@@ -4,7 +4,7 @@ import com.khata.accountType.dto.AccountTypeDTO;
 import com.khata.accountType.entity.AccountType;
 import com.khata.accountType.repositories.AccountTypeRepo;
 import com.khata.accountType.services.AccountTypeService;
-import com.khata.accountType.util.AccountCategoryConstants;
+import com.khata.exceptions.ResourceAlreadyExistsException;
 import com.khata.exceptions.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -28,35 +28,34 @@ public class AccountTypeServiceImpl implements AccountTypeService {
     @Override
     @Transactional
     public AccountTypeDTO createAccountType(AccountTypeDTO accountTypeDTO) {
-        AccountType accountType = this.modelMapper.map(accountTypeDTO, AccountType.class);
-        AccountType savedAccountType = this.accountTypeRepo.save(accountType);
-        log.info("Account type created with title : {}", savedAccountType.getCategory().getName());
-        return this.modelMapper.map(savedAccountType, AccountTypeDTO.class);
+        boolean exists = accountTypeRepo.existsByName(accountTypeDTO.getName());
+        if (exists) {
+            throw new ResourceAlreadyExistsException("AccountType", accountTypeDTO.getName());
+        }
+
+        AccountType accountType = modelMapper.map(accountTypeDTO, AccountType.class);
+        AccountType savedAccountType = accountTypeRepo.save(accountType);
+        log.info("Account type created with name : {}", savedAccountType.getName());
+        return modelMapper.map(savedAccountType, AccountTypeDTO.class);
     }
 
     @Override
     @Transactional
     public AccountTypeDTO updateAccountType(AccountTypeDTO accountTypeDTO, Integer accountTypeId) {
         AccountType accountType = getAccountTypeEntityById(accountTypeId);
-        String accountCategoryTypeName = accountType.getCategory().getName();
-
-        if(!AccountCategoryConstants.isDefaultCategory(accountCategoryTypeName)){
-            accountType.setCategory(accountTypeDTO.getCategory());
-            accountType.setTransactionType(accountTypeDTO.getTransactionType());
-            accountType.setDescription(accountTypeDTO.getDescription());
-            AccountType updatedAccountType = this.accountTypeRepo.save(accountType);
-            log.info("Account type updated with id : {}", accountTypeId);
-            return this.modelMapper.map(updatedAccountType, AccountTypeDTO.class);
-        }else{
-            throw new UnsupportedOperationException("Updating default account type is not allowed");
-        }
+        accountType.setName(accountTypeDTO.getName());
+        accountType.setTransactionType(accountTypeDTO.getTransactionType());
+        accountType.setDescription(accountTypeDTO.getDescription());
+        AccountType updatedAccountType = accountTypeRepo.save(accountType);
+        log.info("Account type updated with id : {}", accountTypeId);
+        return modelMapper.map(updatedAccountType, AccountTypeDTO.class);
     }
 
     @Override
     @Transactional(readOnly = true)
     public AccountTypeDTO getAccountTypeById(Integer accountTypeId) {
         AccountType accountType = getAccountTypeEntityById(accountTypeId);
-        return this.modelMapper.map(accountType, AccountTypeDTO.class);
+        return modelMapper.map(accountType, AccountTypeDTO.class);
     }
 
     @Override
@@ -69,16 +68,13 @@ public class AccountTypeServiceImpl implements AccountTypeService {
     @Override
     public void deleteAccountType(Integer accountTypeId) {
         AccountType accountType = getAccountTypeEntityById(accountTypeId);
-        String accountCategoryTypeName = accountType.getCategory().getName();
-        if(!AccountCategoryConstants.isDefaultCategory(accountCategoryTypeName)){
-            this.accountTypeRepo.delete(accountType);
-        }else{
-            throw new UnsupportedOperationException("Deleting default account type is not allowed");
-        }
+        log.info("Account type deleted with id : {}", accountTypeId);
+        accountTypeRepo.delete(accountType);
     }
 
     private AccountType getAccountTypeEntityById(Integer accountTypeId){
-        return this.accountTypeRepo.findById(accountTypeId).orElseThrow(
+        return accountTypeRepo.findById(accountTypeId).orElseThrow(
                 ()-> new ResourceNotFoundException("AccountType with", "id", accountTypeId));
     }
+
 }

@@ -22,8 +22,8 @@ import javax.crypto.SecretKey;
 public class JwtTokenService {
 
     // Token validity in seconds
-//    public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60 * 1000;
-    public static final long JWT_TOKEN_VALIDITY = 60 * 1000; // 1 minute in milliseconds
+    public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60 * 1000;
+//    public static final long JWT_TOKEN_VALIDITY = 60 * 1000; // 1 minute in milliseconds
 
     // Securely generate a secret key (recommend external configuration for production)
     private String secretKey = "";

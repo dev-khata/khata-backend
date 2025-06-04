@@ -30,14 +30,14 @@ public class PartyController {
     @PostMapping("/")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ApiResponse<PartyDTO>> createParty(@Valid @RequestBody PartyDTO partyDTO) {
-        PartyDTO party = this.partyService.createParty(partyDTO);
+        PartyDTO party = partyService.createParty(partyDTO);
         ApiResponse<PartyDTO> response = new ApiResponse<>(party, HttpStatus.CREATED.value(), "Party Created Successfully");
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping
     public ResponseEntity<ApiResponse<PaginationResponse<PartyDTO>>> getPartyList(Pageable pageable) {
-        Page<PartyDTO> partyDTOPage = this.partyService.getParties(pageable);
+        Page<PartyDTO> partyDTOPage = partyService.getParties(pageable);
 
         PaginationResponse<PartyDTO> paginationPayload = PaginationUtil.buildPaginationResponse(partyDTOPage);
 
@@ -47,20 +47,20 @@ public class PartyController {
 
     @PutMapping("/{partyId}")
     public ResponseEntity<ApiResponse<PartyDTO>> updateParty(@Valid @RequestBody PartyDTO partyDTO, @PathVariable Integer partyId) {
-        PartyDTO party = this.partyService.updateParty(partyDTO, partyId);
+        PartyDTO party = partyService.updateParty(partyDTO, partyId);
         ApiResponse<PartyDTO> response = new ApiResponse<>(party, HttpStatus.OK.value(), "Party Updated Successfully");
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{partyId}")
     public ResponseEntity<ApiResponse<PartyDTO>> getPartyDetails(@PathVariable Integer partyId) {
-        PartyDTO partyDTO = this.partyService.getPartyById(partyId);
+        PartyDTO partyDTO = partyService.getPartyById(partyId);
         return ResponseEntity.ok(new ApiResponse<>(partyDTO, HttpStatus.OK.value()));
     }
 
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<PaginationResponse<PartyDTO>>> searchPartyByName(@RequestParam String keyword, Pageable pageable) {
-        Page<PartyDTO> partyDTOPage = this.partyService.searchPartyByName(keyword, pageable);
+        Page<PartyDTO> partyDTOPage = partyService.searchPartyByName(keyword, pageable);
 
         PaginationResponse<PartyDTO> paginationPayload = PaginationUtil.buildPaginationResponse(partyDTOPage);
 
@@ -70,7 +70,7 @@ public class PartyController {
 
     @DeleteMapping("/{partyId}")
     public ResponseEntity<ApiResponse<Void>> deleteParty(@PathVariable Integer partyId) {
-        this.partyService.deleteParty(partyId);
+        partyService.deleteParty(partyId);
         return ResponseEntity.ok(new ApiResponse<>(null, HttpStatus.OK.value(), "Party Deleted Successfully"));
     }
 

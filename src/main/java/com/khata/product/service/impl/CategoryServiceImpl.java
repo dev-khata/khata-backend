@@ -27,10 +27,10 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public CategoryDTO createCategory(CategoryDTO categoryDTO) {
-        Category category = this.modelMapper.map(categoryDTO, Category.class);
-        Category savedCategory = this.categoryRepo.save(category);
+        Category category = modelMapper.map(categoryDTO, Category.class);
+        Category savedCategory = categoryRepo.save(category);
         log.info("Category created with title: {}", category.getTitle());
-        return this.modelMapper.map(savedCategory, CategoryDTO.class);
+        return modelMapper.map(savedCategory, CategoryDTO.class);
     }
 
     @Override
@@ -38,29 +38,29 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryDTO updateCategory(CategoryDTO categoryDTO, Integer categoryId) {
         Category category = getCategoryEntityById(categoryId);
         category.setTitle(categoryDTO.getTitle());
-        Category updatedCategory = this.categoryRepo.save(category);
+        Category updatedCategory = categoryRepo.save(category);
         log.info("Category updated with ID: {}", categoryId);
-        return this.modelMapper.map(updatedCategory, CategoryDTO.class);
+        return modelMapper.map(updatedCategory, CategoryDTO.class);
     }
 
     @Override
     @Transactional(readOnly = true)
     public CategoryDTO getCategoryById(Integer categoryId) {
         Category category = getCategoryEntityById(categoryId);
-        return this.modelMapper.map(category, CategoryDTO.class);
+        return modelMapper.map(category, CategoryDTO.class);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<CategoryDTO> getCategories(Pageable pageable) {
-        Page<Category> categories = this.categoryRepo.findAll(pageable);
-        return categories.map(category -> this.modelMapper.map(category, CategoryDTO.class));
+        Page<Category> categories = categoryRepo.findAll(pageable);
+        return categories.map(category -> modelMapper.map(category, CategoryDTO.class));
     }
 
     @Override
     public void deleteCategory(Integer categoryId) {
         Category category = getCategoryEntityById(categoryId);
-        this.categoryRepo.delete(category);
+        categoryRepo.delete(category);
         log.info("Category deleted with ID: {}", categoryId);
     }
 

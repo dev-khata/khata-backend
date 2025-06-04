@@ -30,11 +30,11 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public ProductDTO createProduct(ProductDTO productDTO) {
         String productId = generateProductId(productDTO.getName());
-        Product product = this.modelMapper.map(productDTO, Product.class);
+        Product product = modelMapper.map(productDTO, Product.class);
         product.setProductId(productId);
-        Product savedProduct = this.productRepo.save(product);
+        Product savedProduct = productRepo.save(product);
         log.info("Product created with title: {}", product.getName());
-        return this.modelMapper.map(savedProduct, ProductDTO.class);
+        return modelMapper.map(savedProduct, ProductDTO.class);
     }
 
     @Override
@@ -45,29 +45,29 @@ public class ProductServiceImpl implements ProductService {
         product.setQuantity(product.getQuantity());
         product.setSellingPrice(product.getSellingPrice());
         product.setPurchasePrice(product.getPurchasePrice());
-        Product updatedProduct = this.productRepo.save(product);
+        Product updatedProduct = productRepo.save(product);
         log.info("Product updated with ID: {}", productId);
-        return this.modelMapper.map(updatedProduct, ProductDTO.class);
+        return modelMapper.map(updatedProduct, ProductDTO.class);
     }
 
     @Override
     @Transactional(readOnly = true)
     public ProductDTO getProductById(Integer productId) {
         Product product = getProductEntityById(productId);
-        return this.modelMapper.map(product, ProductDTO.class);
+        return modelMapper.map(product, ProductDTO.class);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<ProductDTO> getProducts(Pageable pageable) {
-        Page<Product> products = this.productRepo.findAll(pageable);
-        return products.map(product -> this.modelMapper.map(product, ProductDTO.class));
+        Page<Product> products = productRepo.findAll(pageable);
+        return products.map(product -> modelMapper.map(product, ProductDTO.class));
     }
 
     @Override
     public void deleteProduct(Integer productId) {
         Product product = getProductEntityById(productId);
-        this.productRepo.delete(product);
+        productRepo.delete(product);
         log.info("Product deleted with ID: {}", productId);
     }
 

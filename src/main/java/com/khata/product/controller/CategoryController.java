@@ -23,7 +23,7 @@ public class CategoryController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ApiResponse<CategoryDTO>> createCategory(@Valid @RequestBody CategoryDTO categoryDTO) {
-        CategoryDTO category = this.categoryService.createCategory(categoryDTO);
+        CategoryDTO category = categoryService.createCategory(categoryDTO);
         ApiResponse<CategoryDTO> response = new ApiResponse<>(
                 category, HttpStatus.CREATED.value(), "Category Created successfully");
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -31,13 +31,13 @@ public class CategoryController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<CategoryDTO>>> getCategories(Pageable pageable) {
-        Page<CategoryDTO> categoryDTOSPage = this.categoryService.getCategories(pageable);
+        Page<CategoryDTO> categoryDTOSPage = categoryService.getCategories(pageable);
         return ResponseEntity.ok(new ApiResponse<>(categoryDTOSPage, HttpStatus.OK.value()));
     }
 
     @PutMapping("/{categoryId}")
     public ResponseEntity<ApiResponse<CategoryDTO>> updateCategory(@Valid @RequestBody CategoryDTO categoryDTO, @PathVariable Integer categoryId) {
-        CategoryDTO updatedCategory = this.categoryService.updateCategory(categoryDTO, categoryId);
+        CategoryDTO updatedCategory = categoryService.updateCategory(categoryDTO, categoryId);
         ApiResponse<CategoryDTO> response = new ApiResponse<>(
                 updatedCategory, HttpStatus.OK.value(), "Category Updated successfully");
         return ResponseEntity.ok(response);
@@ -45,13 +45,13 @@ public class CategoryController {
 
     @GetMapping("/{categoryId}")
     public ResponseEntity<ApiResponse<CategoryDTO>> getCategoryDetails(@PathVariable Integer categoryId) {
-        CategoryDTO categoryDTO = this.categoryService.getCategoryById(categoryId);
+        CategoryDTO categoryDTO = categoryService.getCategoryById(categoryId);
         return ResponseEntity.ok(new ApiResponse<>(categoryDTO, HttpStatus.OK.value()));
     }
 
     @DeleteMapping("/{categoryId}")
     public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable Integer categoryId) {
-        this.categoryService.deleteCategory(categoryId);
+        categoryService.deleteCategory(categoryId);
         ApiResponse<Void> response = new ApiResponse<>(null, HttpStatus.OK.value(), "Category Deleted successfully");
         return ResponseEntity.ok(response);
     }

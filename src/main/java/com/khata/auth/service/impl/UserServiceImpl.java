@@ -25,7 +25,6 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder encoder;
     private final MailVerificationService mailVerificationService;
 
-
     public UserServiceImpl(UserRepo userRepo, ModelMapper modelMapper, PasswordEncoder encoder, MailVerificationService mailVerificationService) {
         this.userRepo = userRepo;
         this.modelMapper = modelMapper;
@@ -40,7 +39,7 @@ public class UserServiceImpl implements UserService {
         checkEmailIfExists(userDTO.getEmail());
         checkPhoneNumberIfExists(userDTO.getPhoneNumber());
         user.setPassword(encodePassword(userDTO.getPassword()));
-        User savedUser = this.userRepo.save(user);
+        User savedUser = userRepo.save(user);
         mailVerificationService.sendVerificationEmail(userDTO.getEmail());
         log.info("User created with email: {}", userDTO.getEmail());
         return modelMapper.map(savedUser, UserDTO.class);
@@ -64,7 +63,7 @@ public class UserServiceImpl implements UserService {
         if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
             user.setPassword(encodePassword(userDTO.getPassword()));
         }
-        User updateUser = this.userRepo.save(user);
+        User updateUser = userRepo.save(user);
         log.info("User updated with ID: {}", userId);
         return modelMapper.map(updateUser, UserDTO.class);
     }
@@ -79,14 +78,14 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public Page<UserDTO> getUsers(Pageable pageable) {
-        Page<User> users = this.userRepo.findAll(pageable);
+        Page<User> users = userRepo.findAll(pageable);
         return users.map(user -> modelMapper.map(user, UserDTO.class));
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<UserDTO> searchUserByName(String name, Pageable pageable) {
-        Page<User> users = this.userRepo.findByFullNameContainingIgnoreCase(name, pageable);
+        Page<User> users = userRepo.findByFullNameContainingIgnoreCase(name, pageable);
         return users.map(user -> modelMapper.map(user, UserDTO.class));
     }
 
@@ -94,7 +93,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deleteUser(Integer userId) {
         User user = getUserEntityById(userId);
-        this.userRepo.delete(user);
+        userRepo.delete(user);
         log.info("User deleted with ID: {}", userId);
     }
 
@@ -107,7 +106,7 @@ public class UserServiceImpl implements UserService {
         if (rawPassword == null || rawPassword.isEmpty()) {
             throw new IllegalArgumentException("Password cannot be null or empty");
         }
-        return this.encoder.encode(rawPassword);
+        return encoder.encode(rawPassword);
     }
 
     private void checkEmailIfExists(String email) {
