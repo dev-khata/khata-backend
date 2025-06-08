@@ -10,6 +10,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ChartOfAccountDTO {
+
+    private Integer id;
+
     @NotNull(message = "Chart of account name cannot be null.")
     private String name;
 

@@ -13,8 +13,8 @@ import lombok.Setter;
 @Setter
 public class CategoryDTO {
     private Integer id;
-    @NotBlank(message = "Category title cannot be blank.")
 
+    @NotBlank(message = "Category title cannot be blank.")
     @Size(max = 100, message = "title must be less than 100 characters.")
     private String title;
 

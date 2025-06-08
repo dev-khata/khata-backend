@@ -11,7 +11,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ChartOfAccount {
-    @jakarta.persistence.Id
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer Id;
 

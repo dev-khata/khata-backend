@@ -12,6 +12,8 @@ import lombok.Setter;
 @Setter
 public class AccountTypeDTO {
 
+    private Integer id;
+
     @NotNull(message = "Account type cannot be null.")
     private String name;
 
