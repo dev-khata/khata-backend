@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/account-type")
+@RequestMapping("/api/account-type")
 @AllArgsConstructor
 public class AccountTypeController {
 

@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/chart-of-account")
+@RequestMapping("/api/chart-of-account")
 @AllArgsConstructor
 public class CharOfAccountController {
 
