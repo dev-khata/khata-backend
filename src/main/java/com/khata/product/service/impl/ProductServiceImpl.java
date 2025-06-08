@@ -2,7 +2,9 @@ package com.khata.product.service.impl;
 
 import com.khata.exceptions.ResourceNotFoundException;
 import com.khata.product.dto.ProductDTO;
+import com.khata.product.entity.Category;
 import com.khata.product.entity.Product;
+import com.khata.product.repositories.CategoryRepo;
 import com.khata.product.repositories.ProductRepo;
 import com.khata.product.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
@@ -20,18 +22,24 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepo productRepo;
     private final ModelMapper modelMapper;
+    private final CategoryRepo categoryRepo;
 
-    public ProductServiceImpl(ProductRepo productRepo, ModelMapper modelMapper) {
+    public ProductServiceImpl(ProductRepo productRepo, ModelMapper modelMapper, CategoryRepo categoryRepo) {
         this.productRepo = productRepo;
         this.modelMapper = modelMapper;
+        this.categoryRepo = categoryRepo;
+
+        configureModelMapperForProductToProductDTO();
     }
 
     @Override
     @Transactional
     public ProductDTO createProduct(ProductDTO productDTO) {
-        String productId = generateProductId(productDTO.getName());
         Product product = modelMapper.map(productDTO, Product.class);
+        String productId = generateProductId(productDTO.getName());
         product.setProductId(productId);
+        Category category = getCategoryEntityById(productDTO.getCategory());
+        product.setCategory(category);
         Product savedProduct = productRepo.save(product);
         log.info("Product created with title: {}", product.getName());
         return modelMapper.map(savedProduct, ProductDTO.class);
@@ -41,10 +49,14 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public ProductDTO updateProduct(ProductDTO productDTO, Integer productId) {
         Product product = getProductEntityById(productId);
-        product.setName(product.getName());
-        product.setQuantity(product.getQuantity());
-        product.setSellingPrice(product.getSellingPrice());
-        product.setPurchasePrice(product.getPurchasePrice());
+        product.setName(productDTO.getName());
+        product.setQuantity(productDTO.getQuantity());
+        product.setSellingPrice(productDTO.getSellingPrice());
+        product.setPurchasePrice(productDTO.getPurchasePrice());
+
+        Category category = getCategoryEntityById(productDTO.getCategory());
+        product.setCategory(category);
+
         Product updatedProduct = productRepo.save(product);
         log.info("Product updated with ID: {}", productId);
         return modelMapper.map(updatedProduct, ProductDTO.class);
@@ -76,6 +88,19 @@ public class ProductServiceImpl implements ProductService {
         return productRepo.findById(productId).orElseThrow(
                 () -> new ResourceNotFoundException("Product", "id", productId)
         );
+    }
+
+    private Category getCategoryEntityById(Integer categoryId) {
+        return categoryRepo.findById(categoryId).orElseThrow(
+                () -> new ResourceNotFoundException("Category", "id", categoryId)
+        );
+    }
+
+    private void configureModelMapperForProductToProductDTO() {
+        if (this.modelMapper.getTypeMap(Product.class, ProductDTO.class) == null) {
+            this.modelMapper.typeMap(Product.class, ProductDTO.class)
+                    .addMapping(src -> src.getCategory().getId(), ProductDTO::setCategory);
+        }
     }
 
     /**

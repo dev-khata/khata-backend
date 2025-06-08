@@ -1,10 +1,14 @@
 package com.khata.accountType.entity;
 
 import com.khata.accountType.entity.enums.TransactionType;
+import com.khata.chartOfAccount.entity.ChartOfAccount;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @NoArgsConstructor
 @Entity
@@ -27,4 +31,7 @@ public class AccountType {
 
     @Column(length = 300)
     private String description;
+
+    @OneToMany(mappedBy = "accountType", cascade = CascadeType.ALL)
+    private List<ChartOfAccount> chatOfAccounts = new ArrayList<>();
 }
