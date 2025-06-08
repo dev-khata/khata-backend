@@ -4,6 +4,8 @@ import com.khata.accountType.dto.AccountTypeDTO;
 import com.khata.accountType.entity.AccountType;
 import com.khata.accountType.repositories.AccountTypeRepo;
 import com.khata.accountType.services.AccountTypeService;
+import com.khata.accountType.util.SystemAccountTypes;
+import com.khata.exceptions.BadRequestException;
 import com.khata.exceptions.ResourceAlreadyExistsException;
 import com.khata.exceptions.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -43,9 +45,12 @@ public class AccountTypeServiceImpl implements AccountTypeService {
     @Transactional
     public AccountTypeDTO updateAccountType(AccountTypeDTO accountTypeDTO, Integer accountTypeId) {
         AccountType accountType = getAccountTypeEntityById(accountTypeId);
+        checkIfSystemAccountTypeByName(accountType.getName(), accountType, "updated");
+
         accountType.setName(accountTypeDTO.getName());
         accountType.setTransactionType(accountTypeDTO.getTransactionType());
         accountType.setDescription(accountTypeDTO.getDescription());
+
         AccountType updatedAccountType = accountTypeRepo.save(accountType);
         log.info("Account type updated with id : {}", accountTypeId);
         return modelMapper.map(updatedAccountType, AccountTypeDTO.class);
@@ -62,19 +67,35 @@ public class AccountTypeServiceImpl implements AccountTypeService {
     @Transactional(readOnly = true)
     public Page<AccountTypeDTO> getAccountTypes(Pageable pageable) {
         Page<AccountType> accountTypes = accountTypeRepo.findAll(pageable);
-        return accountTypes.map(accountType -> modelMapper.map(accountType,AccountTypeDTO.class));
+        return accountTypes.map(accountType -> modelMapper.map(accountType, AccountTypeDTO.class));
     }
 
     @Override
     public void deleteAccountType(Integer accountTypeId) {
         AccountType accountType = getAccountTypeEntityById(accountTypeId);
+        checkIfSystemDefined(accountType, "deleted");
         log.info("Account type deleted with id : {}", accountTypeId);
         accountTypeRepo.delete(accountType);
     }
 
-    private AccountType getAccountTypeEntityById(Integer accountTypeId){
+    private AccountType getAccountTypeEntityById(Integer accountTypeId) {
         return accountTypeRepo.findById(accountTypeId).orElseThrow(
-                ()-> new ResourceNotFoundException("AccountType with", "id", accountTypeId));
+                () -> new ResourceNotFoundException("AccountType with", "id", accountTypeId));
+    }
+
+    private void checkIfSystemAccountTypeByName(String name, AccountType accountType, String action) {
+        for (SystemAccountTypes systemType : SystemAccountTypes.values()) {
+            if (systemType.getName().equalsIgnoreCase(name)) {
+                checkIfSystemDefined(accountType, action);
+                break;
+            }
+        }
+    }
+
+    private void checkIfSystemDefined(AccountType accountType, String action) {
+        if (accountType.isSystemDefined()) {
+            throw new BadRequestException("System-defined account type cannot be " + action + ".");
+        }
     }
 
 }

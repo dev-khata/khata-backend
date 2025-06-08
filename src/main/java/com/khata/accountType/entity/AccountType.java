@@ -1,6 +1,5 @@
 package com.khata.accountType.entity;
 
-import com.khata.accountType.entity.enums.AccountCategoryType;
 import com.khata.accountType.entity.enums.TransactionType;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -17,13 +16,14 @@ public class AccountType {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 100, unique = true)
-    private AccountCategoryType name;
+    private String name;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 100)
     private TransactionType transactionType;
+
+    private boolean isSystemDefined = false;
 
     @Column(length = 300)
     private String description;

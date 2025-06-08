@@ -1,6 +1,5 @@
 package com.khata.accountType.dto;
 
-import com.khata.accountType.entity.enums.AccountCategoryType;
 import com.khata.accountType.entity.enums.TransactionType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -14,12 +13,12 @@ import lombok.Setter;
 public class AccountTypeDTO {
 
     @NotNull(message = "Account type cannot be null.")
-    private AccountCategoryType name;
+    private String name;
 
     @NotNull(message = "Transaction type cannot be null.")
     private TransactionType transactionType;
 
-    private boolean isDefault;
+    private boolean isSystemDefined;
 
     @Size(max = 300, message = "Description must be less than 300 characters.")
     private String description;

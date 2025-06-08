@@ -114,4 +114,13 @@ public class GlobalExceptionHandler {
          ApiResponse<Object> apiResponse = new ApiResponse<>(null, HttpStatus.UNAUTHORIZED.value(), message);
          return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
      }
+
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiResponse<Object>> handleBadRequestException(BadRequestException ex) {
+        String message = ex.getMessage();
+        ApiResponse<Object> apiResponse = new ApiResponse<>(null, HttpStatus.BAD_REQUEST.value(), message);
+        return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
+    }
+
 }
