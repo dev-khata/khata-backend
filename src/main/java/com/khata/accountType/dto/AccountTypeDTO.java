@@ -20,6 +20,7 @@ public class AccountTypeDTO {
     @NotNull(message = "Transaction type cannot be null.")
     private TransactionType transactionType;
 
+    @NotNull(message = "System default cannot be null.")
     private boolean isSystemDefault;
 
     @Size(max = 300, message = "Description must be less than 300 characters.")

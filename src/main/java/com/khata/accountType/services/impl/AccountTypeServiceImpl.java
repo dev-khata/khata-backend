@@ -32,7 +32,7 @@ public class AccountTypeServiceImpl implements AccountTypeService {
     public AccountTypeDTO createAccountType(AccountTypeDTO accountTypeDTO) {
         boolean exists = accountTypeRepo.existsByName(accountTypeDTO.getName());
         if (exists) {
-            throw new ResourceAlreadyExistsException("AccountType", accountTypeDTO.getName());
+            alreadyExists(accountTypeDTO.getName());
         }
 
         AccountType accountType = modelMapper.map(accountTypeDTO, AccountType.class);
@@ -45,7 +45,13 @@ public class AccountTypeServiceImpl implements AccountTypeService {
     @Transactional
     public AccountTypeDTO updateAccountType(AccountTypeDTO accountTypeDTO, Integer accountTypeId) {
         AccountType accountType = getAccountTypeEntityById(accountTypeId);
-        checkIfSystemAccountTypeByName(accountType.getName(), accountType, "updated");
+
+        checkIfSystemDefined(accountType, "updated");
+
+        boolean exists = accountTypeRepo.existsByName(accountTypeDTO.getName());
+        if (exists) {
+            alreadyExists(accountTypeDTO.getName());
+        }
 
         accountType.setName(accountTypeDTO.getName());
         accountType.setTransactionType(accountTypeDTO.getTransactionType());
@@ -84,19 +90,14 @@ public class AccountTypeServiceImpl implements AccountTypeService {
                 () -> new ResourceNotFoundException("AccountType with", "id", accountTypeId));
     }
 
-    private void checkIfSystemAccountTypeByName(String name, AccountType accountType, String action) {
-        for (SystemAccountTypes systemType : SystemAccountTypes.values()) {
-            if (systemType.getName().equalsIgnoreCase(name)) {
-                checkIfSystemDefined(accountType, action);
-                break;
-            }
-        }
-    }
-
     private void checkIfSystemDefined(AccountType accountType, String action) {
         if (accountType.isSystemDefault()) {
             throw new BadRequestException("System-defined account type cannot be " + action + ".");
         }
+    }
+
+    private void alreadyExists(String name){
+        throw new ResourceAlreadyExistsException("AccountType", name);
     }
 
 }
