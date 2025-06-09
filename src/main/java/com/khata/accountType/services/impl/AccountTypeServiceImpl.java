@@ -50,6 +50,7 @@ public class AccountTypeServiceImpl implements AccountTypeService {
         accountType.setName(accountTypeDTO.getName());
         accountType.setTransactionType(accountTypeDTO.getTransactionType());
         accountType.setDescription(accountTypeDTO.getDescription());
+        accountType.setSystemDefault(accountTypeDTO.isSystemDefault());
 
         AccountType updatedAccountType = accountTypeRepo.save(accountType);
         log.info("Account type updated with id : {}", accountTypeId);
@@ -93,7 +94,7 @@ public class AccountTypeServiceImpl implements AccountTypeService {
     }
 
     private void checkIfSystemDefined(AccountType accountType, String action) {
-        if (accountType.isSystemDefined()) {
+        if (accountType.isSystemDefault()) {
             throw new BadRequestException("System-defined account type cannot be " + action + ".");
         }
     }

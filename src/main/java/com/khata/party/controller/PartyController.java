@@ -27,7 +27,7 @@ public class PartyController {
             description = "Get endpoint for party",
             summary = "This is the summary for the party get endpoint"
     )
-    @PostMapping("/")
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ApiResponse<PartyDTO>> createParty(@Valid @RequestBody PartyDTO partyDTO) {
         PartyDTO party = partyService.createParty(partyDTO);

@@ -27,7 +27,7 @@ public class AccountType {
     @Column(nullable = false, length = 100)
     private TransactionType transactionType;
 
-    private boolean isSystemDefined = false;
+    private boolean isSystemDefault = false;
 
     @Column(length = 300)
     private String description;
