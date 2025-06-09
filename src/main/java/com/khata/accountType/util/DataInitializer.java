@@ -18,7 +18,7 @@ public class DataInitializer {
                     type.setName(predefinedAccountType.getName());
                     type.setDescription(predefinedAccountType.getDescription());
                     type.setTransactionType(predefinedAccountType.getTransactionType());
-                    type.setSystemDefined(true);
+                    type.setSystemDefault(true);
                     return accountTypeRepo.save(type);
                 });
             }
