@@ -6,6 +6,7 @@ import com.khata.chartOfAccount.dto.ChartOfAccountDTO;
 import com.khata.chartOfAccount.entity.ChartOfAccount;
 import com.khata.chartOfAccount.repositories.ChartOfAccountRepo;
 import com.khata.chartOfAccount.services.ChartOfAccountServices;
+import com.khata.exceptions.ResourceAlreadyExistsException;
 import com.khata.exceptions.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -34,6 +35,11 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountServices {
     @Override
     @Transactional
     public ChartOfAccountDTO createChartOfAccount(ChartOfAccountDTO chartOfAccountDTO) {
+        boolean exists = chartOfAccountRepo.existsByName(chartOfAccountDTO.getName());
+        if (exists) {
+            alreadyExists(chartOfAccountDTO.getName());
+        }
+
         ChartOfAccount chartOfAccount = modelMapper.map(chartOfAccountDTO, ChartOfAccount.class);
         AccountType accountType = getAccountTypeById(chartOfAccountDTO.getAccountType());
         chartOfAccount.setAccountType(accountType);
@@ -46,6 +52,11 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountServices {
     @Override
     @Transactional
     public ChartOfAccountDTO updateChartOfAccount(ChartOfAccountDTO chartOfAccountDTO, Integer chartOfAccountId) {
+        boolean exists = chartOfAccountRepo.existsByName(chartOfAccountDTO.getName());
+        if (exists) {
+            alreadyExists(chartOfAccountDTO.getName());
+        }
+
         ChartOfAccount chartOfAccount = getChartOfAccountEntityById(chartOfAccountId);
         chartOfAccount.setName(chartOfAccountDTO.getName());
         chartOfAccount.setDescription(chartOfAccountDTO.getDescription());
@@ -95,5 +106,9 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountServices {
     private void configureModelMapperForChartOfAccountToChartOfAccountDTO(){
         this.modelMapper.typeMap(ChartOfAccount.class, ChartOfAccountDTO.class)
                 .addMapping(src -> src.getAccountType().getId(), ChartOfAccountDTO::setAccountType);
+    }
+
+    private void alreadyExists(String name){
+        throw new ResourceAlreadyExistsException("Chart of account", name);
     }
 }

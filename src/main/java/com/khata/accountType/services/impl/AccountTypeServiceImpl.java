@@ -97,7 +97,7 @@ public class AccountTypeServiceImpl implements AccountTypeService {
     }
 
     private void alreadyExists(String name){
-        throw new ResourceAlreadyExistsException("AccountType", name);
+        throw new ResourceAlreadyExistsException("Account type", name);
     }
 
 }
