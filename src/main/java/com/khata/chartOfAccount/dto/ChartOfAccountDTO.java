@@ -22,6 +22,8 @@ public class ChartOfAccountDTO {
     @NotNull(message = "Account type cannot ber null.")
     private Integer accountType;
 
+    private String accountTypeName;
+
     private boolean isSystemDefault;
 
     private boolean isActive;
