@@ -89,7 +89,7 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountServices {
 
     private AccountType getAccountTypeById(Integer accountTypeId){
         return accountTypeRepo.findById(accountTypeId).orElseThrow(
-                () -> new ResourceNotFoundException("Chart of account", "id", accountTypeId));
+                () -> new ResourceNotFoundException("Account type", "id", accountTypeId));
     }
 
     private void configureModelMapperForChartOfAccountToChartOfAccountDTO(){
