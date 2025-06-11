@@ -36,4 +36,6 @@ public class ProductDTO {
 
     @NotNull(message = "Category cannot be null")
     private Integer category;
+
+    private String categoryTitle;
 }

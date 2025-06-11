@@ -15,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @Slf4j
 public class ChartOfAccountServiceImpl implements ChartOfAccountServices {
@@ -52,8 +54,8 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountServices {
     @Override
     @Transactional
     public ChartOfAccountDTO updateChartOfAccount(ChartOfAccountDTO chartOfAccountDTO, Integer chartOfAccountId) {
-        boolean exists = chartOfAccountRepo.existsByName(chartOfAccountDTO.getName());
-        if (exists) {
+        Optional<ChartOfAccount> existingByName = chartOfAccountRepo.findByName(chartOfAccountDTO.getName());
+        if (existingByName.isPresent() && !existingByName.get().getId().equals(chartOfAccountId)) {
             alreadyExists(chartOfAccountDTO.getName());
         }
 

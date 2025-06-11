@@ -6,4 +6,5 @@ import java.util.Optional;
 
 public interface ChartOfAccountRepo extends JpaRepository<ChartOfAccount, Integer> {
     boolean existsByName(String name);
+    Optional<ChartOfAccount> findByName(String name);
 }

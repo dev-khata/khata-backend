@@ -4,7 +4,6 @@ import com.khata.accountType.dto.AccountTypeDTO;
 import com.khata.accountType.entity.AccountType;
 import com.khata.accountType.repositories.AccountTypeRepo;
 import com.khata.accountType.services.AccountTypeService;
-import com.khata.accountType.util.SystemAccountTypes;
 import com.khata.exceptions.BadRequestException;
 import com.khata.exceptions.ResourceAlreadyExistsException;
 import com.khata.exceptions.ResourceNotFoundException;
@@ -14,6 +13,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -48,8 +49,8 @@ public class AccountTypeServiceImpl implements AccountTypeService {
 
         checkIfSystemDefined(accountType, "updated");
 
-        boolean exists = accountTypeRepo.existsByName(accountTypeDTO.getName());
-        if (exists) {
+        Optional<AccountType> existingByName = accountTypeRepo.findByName(accountTypeDTO.getName());
+        if (existingByName.isPresent() && !existingByName.get().getId().equals(accountTypeId)) {
             alreadyExists(accountTypeDTO.getName());
         }
 
