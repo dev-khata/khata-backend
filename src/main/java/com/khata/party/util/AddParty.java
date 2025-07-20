@@ -10,7 +10,6 @@ import org.springframework.context.annotation.Configuration;
 // TODO: Temporary data loader for testing purposes — remove later
 @Configuration
 public class AddParty {
-
     @Bean
     CommandLineRunner commandLineRunner(PartyRepo partyRepo) {
         return args -> {
