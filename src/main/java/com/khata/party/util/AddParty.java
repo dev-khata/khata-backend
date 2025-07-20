@@ -22,7 +22,6 @@ public class AddParty {
                 party.setAddress("Address " + i);
                 party.setPartyBusinessName("Business " + i);
                 party.setPartyType(i % 2 == 0 ? PartyType.CUSTOMER : PartyType.VENDOR);
-
                 partyRepo.save(party);
             }
         };
