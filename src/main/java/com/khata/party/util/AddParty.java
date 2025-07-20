@@ -13,15 +13,24 @@ public class AddParty {
     @Bean
     CommandLineRunner commandLineRunner(PartyRepo partyRepo) {
         return args -> {
-            for (int i = 1; i <= 100; i++) {
-                Party party = new Party();
-                party.setName("Party " + i);
-                party.setEmail("party" + i + "@example.com");
-                party.setPhoneNumber("98000000" + String.format("%02d", i));
-                party.setAddress("Address " + i);
-                party.setPartyBusinessName("Business " + i);
-                party.setPartyType(i % 2 == 0 ? PartyType.CUSTOMER : PartyType.VENDOR);
-                partyRepo.save(party);
+            boolean alreadyExists = partyRepo.existsByEmail("party1@example.com");
+
+            if (!alreadyExists) {
+                for (int i = 1; i <= 100; i++) {
+                    String email = "party" + i + "@example.com";
+
+                    // double-check each email if needed
+                    if (!partyRepo.existsByEmail(email)) {
+                        Party party = new Party();
+                        party.setName("Party " + i);
+                        party.setEmail(email);
+                        party.setPhoneNumber("98000000" + String.format("%02d", i));
+                        party.setAddress("Address " + i);
+                        party.setPartyBusinessName("Business " + i);
+                        party.setPartyType(i % 2 == 0 ? PartyType.CUSTOMER : PartyType.VENDOR);
+                        partyRepo.save(party);
+                    }
+                }
             }
         };
     }
