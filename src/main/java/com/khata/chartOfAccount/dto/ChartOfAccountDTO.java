@@ -1,5 +1,7 @@
 package com.khata.chartOfAccount.dto;
 
+import com.khata.accountType.dto.AccountTypeDTO;
+import com.khata.accountType.dto.AccountTypeSummaryDTO;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -20,9 +22,9 @@ public class ChartOfAccountDTO {
     private String description;
 
     @NotNull(message = "Account type cannot be null.")
-    private Integer accountType;
+    private Integer accountTypeId;
 
-    private String accountTypeName;
+    private AccountTypeSummaryDTO accountType;
 
     private boolean isSystemDefault;
 

@@ -29,9 +29,6 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountServices {
         this.modelMapper = modelMapper;
         this.chartOfAccountRepo = chartOfAccountRepo;
         this.accountTypeRepo = accountTypeRepo;
-
-        // Configure ModelMapper to map AccountType's ID
-        configureModelMapperForChartOfAccountToChartOfAccountDTO();
     }
 
     @Override
@@ -43,7 +40,7 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountServices {
         }
 
         ChartOfAccount chartOfAccount = modelMapper.map(chartOfAccountDTO, ChartOfAccount.class);
-        AccountType accountType = getAccountTypeById(chartOfAccountDTO.getAccountType());
+        AccountType accountType = getAccountTypeById(chartOfAccountDTO.getAccountTypeId());
         chartOfAccount.setAccountType(accountType);
         ChartOfAccount savedAccountType = chartOfAccountRepo.save(chartOfAccount);
 
@@ -63,7 +60,7 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountServices {
         chartOfAccount.setName(chartOfAccountDTO.getName());
         chartOfAccount.setDescription(chartOfAccountDTO.getDescription());
 
-        AccountType accountType = getAccountTypeById(chartOfAccountDTO.getAccountType());
+        AccountType accountType = getAccountTypeById(chartOfAccountDTO.getAccountTypeId());
         chartOfAccount.setAccountType(accountType);
 
         chartOfAccount.setSystemDefault(chartOfAccountDTO.isSystemDefault());
@@ -103,11 +100,6 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountServices {
     private AccountType getAccountTypeById(Integer accountTypeId){
         return accountTypeRepo.findById(accountTypeId).orElseThrow(
                 () -> new ResourceNotFoundException("Account type", "id", accountTypeId));
-    }
-
-    private void configureModelMapperForChartOfAccountToChartOfAccountDTO(){
-        this.modelMapper.typeMap(ChartOfAccount.class, ChartOfAccountDTO.class)
-                .addMapping(src -> src.getAccountType().getId(), ChartOfAccountDTO::setAccountType);
     }
 
     private void alreadyExists(String name){
