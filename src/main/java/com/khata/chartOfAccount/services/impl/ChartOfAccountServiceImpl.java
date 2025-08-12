@@ -40,7 +40,10 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountServices {
         }
 
         ChartOfAccount chartOfAccount = modelMapper.map(chartOfAccountDTO, ChartOfAccount.class);
-        AccountType accountType = getAccountTypeById(chartOfAccountDTO.getAccountTypeId());
+//        AccountType accountType = getAccountTypeById(chartOfAccountDTO.getAccountTypeId());
+        Integer accountTypeId = chartOfAccountDTO.getAccountType().getId();
+        AccountType accountType = accountTypeRepo.findById(accountTypeId)
+                .orElseThrow(() -> new RuntimeException("Account type not found"));
         chartOfAccount.setAccountType(accountType);
         ChartOfAccount savedAccountType = chartOfAccountRepo.save(chartOfAccount);
 
@@ -60,7 +63,10 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountServices {
         chartOfAccount.setName(chartOfAccountDTO.getName());
         chartOfAccount.setDescription(chartOfAccountDTO.getDescription());
 
-        AccountType accountType = getAccountTypeById(chartOfAccountDTO.getAccountTypeId());
+//        AccountType accountType = getAccountTypeById(chartOfAccountDTO.getAccountTypeId());
+        Integer accountTypeId = chartOfAccountDTO.getAccountType().getId();
+        AccountType accountType = accountTypeRepo.findById(accountTypeId)
+                .orElseThrow(() -> new RuntimeException("Account type not found"));
         chartOfAccount.setAccountType(accountType);
 
         chartOfAccount.setSystemDefault(chartOfAccountDTO.isSystemDefault());
@@ -97,12 +103,12 @@ public class ChartOfAccountServiceImpl implements ChartOfAccountServices {
                 () -> new ResourceNotFoundException("Chart of account", "id", chartOfAccountId));
     }
 
-    private AccountType getAccountTypeById(Integer accountTypeId){
+    private AccountType getAccountTypeById(Integer accountTypeId) {
         return accountTypeRepo.findById(accountTypeId).orElseThrow(
                 () -> new ResourceNotFoundException("Account type", "id", accountTypeId));
     }
 
-    private void alreadyExists(String name){
+    private void alreadyExists(String name) {
         throw new ResourceAlreadyExistsException("Chart of account", name);
     }
 }

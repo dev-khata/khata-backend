@@ -1,6 +1,5 @@
 package com.khata.chartOfAccount.dto;
 
-import com.khata.accountType.dto.AccountTypeDTO;
 import com.khata.accountType.dto.AccountTypeSummaryDTO;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -21,8 +20,8 @@ public class ChartOfAccountDTO {
     @Size(max = 300, message = "Description must be less than 300 characters.")
     private String description;
 
-    @NotNull(message = "Account type cannot be null.")
-    private Integer accountTypeId;
+//    @NotNull(message = "Account type cannot be null.")
+//    private Integer accountTypeId;
 
     private AccountTypeSummaryDTO accountType;
 
