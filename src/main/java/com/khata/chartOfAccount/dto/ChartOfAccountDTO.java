@@ -20,9 +20,6 @@ public class ChartOfAccountDTO {
     @Size(max = 300, message = "Description must be less than 300 characters.")
     private String description;
 
-//    @NotNull(message = "Account type cannot be null.")
-//    private Integer accountTypeId;
-
     private AccountTypeSummaryDTO accountType;
 
     private boolean isSystemDefault;
