@@ -2,10 +2,13 @@ package com.khata.party.util;
 
 import com.khata.party.entity.Party;
 import com.khata.party.entity.enums.PartyType;
+import com.khata.party.entity.enums.TransactionType;
 import com.khata.party.repositories.PartyRepo;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.math.BigDecimal;
 
 // TODO: Temporary data loader for testing purposes — remove later
 @Configuration
@@ -27,6 +30,9 @@ public class AddParty {
                         party.setPhoneNumber("98000000" + String.format("%02d", i));
                         party.setAddress("Address " + i);
                         party.setPartyBusinessName("Business " + i);
+                        party.setOpeningBalance(new BigDecimal("1000.00"));
+                        party.setCbf("CBF " + i);
+                        party.setTransactionType(TransactionType.CREDIT);
                         party.setPartyType(i % 2 == 0 ? PartyType.CUSTOMER : PartyType.VENDOR);
                         partyRepo.save(party);
                     }

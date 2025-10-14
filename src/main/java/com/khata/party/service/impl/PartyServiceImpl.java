@@ -56,6 +56,9 @@ public class PartyServiceImpl implements PartyService {
         party.setPartyBusinessName(partyDTO.getPartyBusinessName());
         party.setPhoneNumber(partyDTO.getPhoneNumber());
         party.setAddress(partyDTO.getAddress());
+        party.setCbf(partyDTO.getCbf());
+        party.setOpeningBalance(partyDTO.getOpeningBalance());
+        party.setTransactionType(partyDTO.getTransactionType());
         Party updatedParty = partyRepo.save(party);
         log.info("Party updated with ID: {}", partyId);
         return modelMapper.map(updatedParty, PartyDTO.class);

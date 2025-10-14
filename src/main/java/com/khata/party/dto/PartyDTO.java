@@ -1,13 +1,13 @@
 package com.khata.party.dto;
 
 import com.khata.party.entity.enums.PartyType;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import com.khata.party.entity.enums.TransactionType;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 
 @NoArgsConstructor
 @Getter
@@ -24,7 +24,8 @@ public class PartyDTO {
     @Size(max = 100, message = "Email must be less than 100 characters.")
     private String email;
 
-    @Size(max = 15, message = "Phone number must be less than or equal to 15 digits.")
+    @Size(max = 10, message = "Phone number must be less than or equal to 10 digits.")
+    @Pattern(regexp = "^(97|98)[0-9]{8}$", message = "Phone number must be 10 digits and start with 97 or 98.")
     private String phoneNumber;
 
     @NotBlank(message = "Address cannot be blank.")
@@ -32,8 +33,17 @@ public class PartyDTO {
     private String address;
 
     @NotBlank(message = "Business name cannot be blank.")
-    @Size(min = 7, max = 100, message = "Business name must be between 7 and 100 characters.")
+    @Size(min = 7, max = 20, message = "Business name must be between 7 and 20 characters.")
     private String partyBusinessName;
+
+    private String cbf;
+
+    @NotNull(message = "Opening balance cannot be null.")
+    @DecimalMin(value = "0.0", inclusive = true, message = "Opening balance must be a positive number.")
+    private BigDecimal openingBalance;
+
+    @NotNull(message = "Transaction type cannot be null")
+    private TransactionType transactionType;
 
     @NotNull(message = "Party type cannot be null")
     private PartyType partyType;

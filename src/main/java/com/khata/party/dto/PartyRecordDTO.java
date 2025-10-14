@@ -1,0 +1,37 @@
+package com.khata.party.dto;
+
+import com.khata.party.entity.enums.TransactionType;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+@NoArgsConstructor
+@Getter
+@Setter
+public class PartyRecordDTO {
+    private Integer id;
+
+    @NotBlank(message = "Record particular cannot be blank.")
+    @Size(min = 4, max = 100, message = "Particular must be between 4 and 100 characters.")
+    private String particular;
+
+    @NotNull(message = "Amount cannot be null.")
+    @DecimalMin(value = "0.0", inclusive = true, message = "Amount must be a positive number.")
+    private BigDecimal amount;
+
+    @NotNull(message = "Date cannot be null.")
+    private LocalDate date;
+
+    @NotNull(message = "Transaction type cannot be null.")
+    private TransactionType transactionType;
+
+    @NotNull(message = "Party ID cannot be blank.")
+    private Integer partyId;
+}
