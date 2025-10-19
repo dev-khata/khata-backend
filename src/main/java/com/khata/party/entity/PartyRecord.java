@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @NoArgsConstructor
 @Entity
@@ -25,8 +26,11 @@ public class PartyRecord {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
 
-    @Column(nullable = false, length = 100)
-    private LocalDate date;
+    @Column(nullable = false)
+    private LocalDate nepaliDate;
+
+    @Column(nullable = false)
+    private LocalDate englishDate;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 100)

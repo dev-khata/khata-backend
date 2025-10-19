@@ -26,8 +26,11 @@ public class PartyRecordDTO {
     @DecimalMin(value = "0.0", inclusive = true, message = "Amount must be a positive number.")
     private BigDecimal amount;
 
-    @NotNull(message = "Date cannot be null.")
-    private LocalDate date;
+    @NotNull(message = "Nepali date cannot be null.")
+    private LocalDate nepaliDate;
+
+    @NotNull(message = "English date cannot be null.")
+    private LocalDate englishDate;
 
     @NotNull(message = "Transaction type cannot be null.")
     private TransactionType transactionType;
