@@ -1,13 +1,11 @@
 package com.khata.party.entity;
 
 import com.khata.party.entity.enums.PartyType;
-import com.khata.party.entity.enums.TransactionType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +13,13 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
+@Table(
+        name = "party",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"created_user_id", "email"}),
+                @UniqueConstraint(columnNames = {"created_user_id", "phone_number"})
+        }
+)
 public class Party {
 
     @Id
@@ -24,10 +29,10 @@ public class Party {
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(nullable = false, length = 100)
     private String email;
 
-    @Column(length = 10, unique = true)
+    @Column(length = 10)
     private String phoneNumber;
 
     @Column(nullable = false, length = 100)
@@ -39,12 +44,15 @@ public class Party {
     @Column(length = 100)
     private String cbf;
 
-    @Column(nullable = false, precision = 19, scale = 2)
-    private BigDecimal openingBalance;
+//    @Column(nullable = false, precision = 19, scale = 2)
+//    private BigDecimal openingBalance;
+//
+//    @Enumerated(EnumType.STRING)
+//    @Column(nullable = false, length = 100)
+//    private TransactionType transactionType;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 100)
-    private TransactionType transactionType;
+    @Column(nullable = false, name = "created_user_id")
+    private Integer createdUserID;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)

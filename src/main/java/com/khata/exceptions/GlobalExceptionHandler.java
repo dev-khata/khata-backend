@@ -54,7 +54,7 @@ public class GlobalExceptionHandler {
      *
      * @param ex the exception that was thrown
      * @return a {@link ResponseEntity} containing a map of field names and their
-     *         corresponding validation error messages
+     * corresponding validation error messages
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleMethodArgsNotValidException(MethodArgumentNotValidException ex) {
@@ -74,7 +74,7 @@ public class GlobalExceptionHandler {
      *
      * @param ex the exception that was thrown
      * @return a {@link ResponseEntity} containing an {@link ApiResponse} with the
-     *         error message and HTTP status
+     * error message and HTTP status
      */
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ApiResponse<Object>> handleApiException(ApiException ex) {
@@ -89,7 +89,7 @@ public class GlobalExceptionHandler {
      *
      * @param ex the exception that was thrown
      * @return a {@link ResponseEntity} containing an {@link ApiResponse} with the
-     *         error message and HTTP status
+     * error message and HTTP status
      */
     @ExceptionHandler(ResourceAlreadyExistsException.class)
     public ResponseEntity<ApiResponse<Object>> handleEmailAlreadyExistsException(ResourceAlreadyExistsException ex) {
@@ -105,15 +105,15 @@ public class GlobalExceptionHandler {
      *
      * @param ex the {@link JwtTokenException} that was thrown
      * @return a {@link ResponseEntity} containing an {@link ApiResponse} with the
-     *         error message
-     *         and HTTP status
+     * error message
+     * and HTTP status
      */
-     @ExceptionHandler(JwtTokenException.class)
-     public ResponseEntity<ApiResponse<Object>> handleJwtTokenException(JwtTokenException ex) {
-         String message = ex.getMessage();
-         ApiResponse<Object> apiResponse = new ApiResponse<>(null, HttpStatus.UNAUTHORIZED.value(), message);
-         return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
-     }
+    @ExceptionHandler(JwtTokenException.class)
+    public ResponseEntity<ApiResponse<Object>> handleJwtTokenException(JwtTokenException ex) {
+        String message = ex.getMessage();
+        ApiResponse<Object> apiResponse = new ApiResponse<>(null, HttpStatus.UNAUTHORIZED.value(), message);
+        return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
+    }
 
 
     @ExceptionHandler(BadRequestException.class)

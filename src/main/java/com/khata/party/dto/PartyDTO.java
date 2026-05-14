@@ -1,13 +1,10 @@
 package com.khata.party.dto;
 
 import com.khata.party.entity.enums.PartyType;
-import com.khata.party.entity.enums.TransactionType;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.math.BigDecimal;
 
 @NoArgsConstructor
 @Getter
@@ -38,13 +35,13 @@ public class PartyDTO {
 
     private String cbf;
 
-    @NotNull(message = "Opening balance cannot be null.")
-    @DecimalMin(value = "0.0", inclusive = true, message = "Opening balance must be a positive number.")
-    private BigDecimal openingBalance;
-
-    @NotNull(message = "Transaction type cannot be null")
-    private TransactionType transactionType;
-
+//    @NotNull(message = "Opening balance cannot be null.")
+//    @DecimalMin(value = "0.0", inclusive = true, message = "Opening balance must be a positive number.")
+//    private BigDecimal openingBalance;
+//
+//    @NotNull(message = "Transaction type cannot be null")
+//    private TransactionType transactionType;
+    
     @NotNull(message = "Party type cannot be null")
     private PartyType partyType;
 }

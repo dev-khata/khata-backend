@@ -9,7 +9,12 @@ import java.util.Optional;
 
 public interface PartyRepo extends JpaRepository<Party, Integer> {
     boolean existsByEmail(String email);
-    Optional<Party> findByEmail(String email);
-    Optional<Party> findByPhoneNumber(String phoneNumber);
+
+    Optional<Party> findByEmailAndCreatedUserID(String email, Integer createdUserID);
+
+    Optional<Party> findByPhoneNumberAndCreatedUserID(String phoneNumber, Integer createdUserID);
+
     Page<Party> findByNameContainingIgnoreCase(String name, Pageable pageable);
+
+    Page<Party> findByCreatedUserID(Integer createdUserID, Pageable pageable);
 }

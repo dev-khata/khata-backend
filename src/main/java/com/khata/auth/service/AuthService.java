@@ -59,7 +59,6 @@ public class AuthService {
         UserDetails userDetails = loadUserDetailsByUsername(jwtAuthRequest.getUsername());
         String token = generateJwtTokenForUser(userDetails);
         UserDTO userDTO = mapUserEntityToDTO(findUserEntityByEmail(jwtAuthRequest.getUsername()));
-
         return new JwtAuthResponse(token, userDTO);
     }
 

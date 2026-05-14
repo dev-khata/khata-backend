@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
-public class PartyRecordServiceImpl  implements PartyRecordService {
+public class PartyRecordServiceImpl implements PartyRecordService {
 
     private final PartyRecordRepo partyRecordRepo;
     private final ModelMapper modelMapper;
@@ -73,6 +73,15 @@ public class PartyRecordServiceImpl  implements PartyRecordService {
     public Page<PartyRecordDTO> getPartyRecordsByPartyId(Integer partyId, Pageable pageable) {
         Page<PartyRecord> partyRecords = partyRecordRepo.findByPartyId(partyId, pageable);
         return partyRecords.map(partyRecord -> modelMapper.map(partyRecord, PartyRecordDTO.class));
+    }
+
+    @Override
+    public void createPartyRecordWithOpeningBalance(PartyRecordDTO partyRecordDTO, Party party) {
+        PartyRecord partyRecord = modelMapper.map(partyRecordDTO, PartyRecord.class);
+        partyRecord.setParticular("Opening Balance");
+        partyRecord.setParty(party);
+        log.info("Opening balance created for |  partyId={}", party.getId());
+        partyRecordRepo.save(partyRecord);
     }
 
     private Party getPartyEntityById(Integer partyId) {

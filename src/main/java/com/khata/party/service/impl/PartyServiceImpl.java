@@ -1,10 +1,15 @@
 package com.khata.party.service.impl;
 
+import com.khata.auth.service.AuthService;
+import com.khata.auth.service.UserService;
 import com.khata.exceptions.ResourceAlreadyExistsException;
 import com.khata.exceptions.ResourceNotFoundException;
 import com.khata.party.dto.PartyDTO;
+import com.khata.party.dto.PartyOnboardingDTO;
+import com.khata.party.dto.PartyRecordDTO;
 import com.khata.party.entity.Party;
 import com.khata.party.repositories.PartyRepo;
+import com.khata.party.service.PartyRecordService;
 import com.khata.party.service.PartyService;
 import com.khata.utils.EmailAndPhoneUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -20,20 +25,30 @@ public class PartyServiceImpl implements PartyService {
 
     private final PartyRepo partyRepo;
     private final ModelMapper modelMapper;
+    private final PartyRecordService partyRecordService;
+    private final AuthService authService;
+    private final UserService userService;
 
-    public PartyServiceImpl(PartyRepo partyRepo, ModelMapper modelMapper) {
+    public PartyServiceImpl(PartyRepo partyRepo, ModelMapper modelMapper, PartyRecordService partyRecordService, AuthService authService, UserService userService) {
         this.modelMapper = modelMapper;
         this.partyRepo = partyRepo;
+        this.partyRecordService = partyRecordService;
+        this.authService = authService;
+        this.userService = userService;
     }
 
     @Override
     @Transactional
-    public PartyDTO createParty(PartyDTO partyDTO) {
+    public PartyDTO createParty(PartyOnboardingDTO partyOnboardingDTO) {
+        PartyDTO partyDTO = partyOnboardingDTO.getPartyDetails();
+        PartyRecordDTO partyRecordDTO = partyOnboardingDTO.getPartyRecords();
         Party party = modelMapper.map(partyDTO, Party.class);
         checkEmailIfExists(partyDTO.getEmail());
         checkPhoneNumberIfExists(partyDTO.getPhoneNumber());
+        party.setCreatedUserID(this.userService.getCurrentUserId());
         Party savedParty = partyRepo.save(party);
-        log.info("Party created with name: {}", partyDTO.getName());
+        log.info("Party created successfully | name={}", savedParty.getName());
+        partyRecordService.createPartyRecordWithOpeningBalance(partyRecordDTO, savedParty);
         return modelMapper.map(savedParty, PartyDTO.class);
     }
 
@@ -41,15 +56,12 @@ public class PartyServiceImpl implements PartyService {
     @Transactional
     public PartyDTO updateParty(PartyDTO partyDTO, Integer partyId) {
         Party party = getPartyEntityById(partyId);
-
         if (!party.getEmail().equals(partyDTO.getEmail())) {
             checkEmailIfExists(partyDTO.getEmail());
         }
-
         if (!party.getPhoneNumber().equals(partyDTO.getPhoneNumber())) {
             checkPhoneNumberIfExists(partyDTO.getPhoneNumber());
         }
-
         party.setName(partyDTO.getName());
         party.setEmail(partyDTO.getEmail());
         party.setPartyType(partyDTO.getPartyType());
@@ -57,8 +69,6 @@ public class PartyServiceImpl implements PartyService {
         party.setPhoneNumber(partyDTO.getPhoneNumber());
         party.setAddress(partyDTO.getAddress());
         party.setCbf(partyDTO.getCbf());
-        party.setOpeningBalance(partyDTO.getOpeningBalance());
-        party.setTransactionType(partyDTO.getTransactionType());
         Party updatedParty = partyRepo.save(party);
         log.info("Party updated with ID: {}", partyId);
         return modelMapper.map(updatedParty, PartyDTO.class);
@@ -74,7 +84,8 @@ public class PartyServiceImpl implements PartyService {
     @Override
     @Transactional(readOnly = true)
     public Page<PartyDTO> getParties(Pageable pageable) {
-        Page<Party> parties = partyRepo.findAll(pageable);
+        Integer currentUserId = userService.getCurrentUserId();
+        Page<Party> parties = partyRepo.findByCreatedUserID(currentUserId, pageable);
         return parties.map(party -> modelMapper.map(party, PartyDTO.class));
     }
 
@@ -99,18 +110,25 @@ public class PartyServiceImpl implements PartyService {
     }
 
     private void checkEmailIfExists(String email) {
-        if (!EmailAndPhoneUtil.isValidEmail(email)) {throw new IllegalArgumentException("Invalid email format");}
+        Integer currentUserId = this.userService.getCurrentUserId();
+        if (!EmailAndPhoneUtil.isValidEmail(email)) {
+            throw new IllegalArgumentException("Invalid email format");
+        }
 
-        if (partyRepo.findByEmail(email).isPresent()) {
+        if (partyRepo.findByEmailAndCreatedUserID(email, currentUserId).isPresent()) {
+
             log.error("Email already exists: {}", email);
             throw new ResourceAlreadyExistsException("Email", email);
         }
     }
 
-    private void checkPhoneNumberIfExists(String phoneNumber){
-        if(!EmailAndPhoneUtil.isValidPhoneNumber(phoneNumber)){throw new IllegalArgumentException("Invalid phone number format");}
+    private void checkPhoneNumberIfExists(String phoneNumber) {
+        Integer currentUserId = this.userService.getCurrentUserId();
+        if (!EmailAndPhoneUtil.isValidPhoneNumber(phoneNumber)) {
+            throw new IllegalArgumentException("Invalid phone number format");
+        }
 
-        if(partyRepo.findByPhoneNumber(phoneNumber).isPresent()){
+        if (partyRepo.findByPhoneNumberAndCreatedUserID(phoneNumber, currentUserId).isPresent()) {
             log.error("Phone number already exists: {}", phoneNumber);
             throw new ResourceAlreadyExistsException("Phone number", phoneNumber);
         }

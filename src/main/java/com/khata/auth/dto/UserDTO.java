@@ -14,6 +14,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class UserDTO {
+    @JsonIgnore
     private Integer id;
 
     @NotBlank(message = "Full name cannot be blank.")
@@ -37,17 +38,12 @@ public class UserDTO {
     private boolean isVerified;
 
     @JsonIgnore
-    public Integer getId(){
-        return this.id;
-    }
-
-    @JsonIgnore
     public String getPassword() {
         return this.password;
     }
 
     @JsonProperty
     public void setPassword(String password) {
-        this.password=password;
+        this.password = password;
     }
 }
