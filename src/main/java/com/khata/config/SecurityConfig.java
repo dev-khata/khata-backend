@@ -32,11 +32,16 @@ public class SecurityConfig {
     }
 
     @Bean
+
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration corsConfig = new CorsConfiguration();
-                    corsConfig.setAllowedOrigins(List.of(AppConstants.ANGULAR_URL));
+                    corsConfig.setAllowedOrigins(List.of(
+                            AppConstants.ANGULAR_URL,
+                            "http://localhost:4201",
+                            "http://192.168.1.78:4200"
+                    ));
                     corsConfig.setAllowedMethods(AppConstants.ALLOWED_CORS_METHODS);
                     corsConfig.setAllowedHeaders(AppConstants.ALLOWED_CORS_HEADERS);
                     corsConfig.setAllowCredentials(true);
