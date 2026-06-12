@@ -1,13 +1,15 @@
 package com.khata.product.dto;
 
-import jakarta.validation.constraints.Min;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
+import java.util.List;
 
 @NoArgsConstructor
 @Getter
@@ -16,26 +18,16 @@ public class ProductDTO {
 
     private Integer id;
 
-    private String productId;
+    @NotBlank(message = "Product code cannot be empty")
+    @Size(max = 50, message = "Product code must be less than 50 characters")
+    private String productCode;
 
-    @NotNull(message = "Quantity cannot be null")
-    @Min(value = 0, message = "Quantity must be greater than or equal to 0")
-    private Integer quantity;
-
-    @NotNull(message = "Product name cannot be null")
+    @NotBlank(message = "Product name cannot be empty")
     @Size(max = 100, message = "Product name must be less than 100 characters")
-    private String name;
+    private String productName;
 
-    @NotNull(message = "Purchase price cannot be null")
-    @Min(value = 0, message = "Purchase price must be greater than or equal to 0")
-    private BigDecimal purchasePrice;
+    private Integer createdUserId;
 
-    @NotNull(message = "Selling price cannot be null")
-    @Min(value = 0, message = "Selling price must be greater than or equal to 0")
-    private BigDecimal sellingPrice;
-
-    @NotNull(message = "Category cannot be null")
-    private Integer category;
-
-    private String categoryTitle;
+    @NotEmpty(message = "Department rates cannot be empty")
+    private List<@Valid ProductDepartmentRateDTO> departmentRates;
 }

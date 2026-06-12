@@ -9,5 +9,6 @@ public interface ProductService {
     ProductDTO updateProduct(ProductDTO productDTO, Integer productId);
     ProductDTO getProductById(Integer productId);
     Page<ProductDTO> getProducts(Pageable pageable);
+    Page<ProductDTO> searchProductByName(String keyword, Pageable pageable);
     void deleteProduct(Integer productId);
 }
