@@ -31,8 +31,8 @@ public class RawMaterialStockBatch {
     @JoinColumn(name = "party_id", nullable = false)
     private Party party;
 
-    @Column(nullable = false)
-    private LocalDate purchaseDateNepali;
+    @Column(nullable = false, length = 10)
+    private String purchaseDateNepali;
 
     @Column(nullable = false)
     private LocalDate purchaseDateEnglish;

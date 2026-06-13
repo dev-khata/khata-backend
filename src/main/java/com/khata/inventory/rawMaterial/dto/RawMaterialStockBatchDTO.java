@@ -6,6 +6,7 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,8 +33,9 @@ public class RawMaterialStockBatchDTO {
     private Integer partyId;
 
     @JsonAlias("purchaseNepaliDate")
-    @NotNull(message = "Nepali purchase date cannot be null.")
-    private LocalDate purchaseDateNepali;
+    @NotBlank(message = "Nepali purchase date cannot be blank.")
+    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Nepali purchase date must be in yyyy-MM-dd format.")
+    private String purchaseDateNepali;
 
     @JsonAlias("purchaseEnglishDate")
     @NotNull(message = "English purchase date cannot be null.")
