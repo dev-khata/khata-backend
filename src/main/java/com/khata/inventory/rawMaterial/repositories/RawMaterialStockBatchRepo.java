@@ -16,6 +16,12 @@ public interface RawMaterialStockBatchRepo extends JpaRepository<RawMaterialStoc
 
     Page<RawMaterialStockBatch> findByRawMaterialIdAndCreatedUserId(Integer rawMaterialId, Integer createdUserId, Pageable pageable);
 
+    Page<RawMaterialStockBatch> findByRawMaterialIdAndCreatedUserIdAndFiscalYearId(
+            Integer rawMaterialId,
+            Integer createdUserId,
+            Integer fiscalYearId,
+            Pageable pageable);
+
     @Query("select coalesce(sum(batch.rollCount), 0) from RawMaterialStockBatch batch where batch.rawMaterial.id = :rawMaterialId and batch.createdUserId = :createdUserId")
     Long sumRollCountByRawMaterialIdAndCreatedUserId(@Param("rawMaterialId") Integer rawMaterialId, @Param("createdUserId") Integer createdUserId);
 

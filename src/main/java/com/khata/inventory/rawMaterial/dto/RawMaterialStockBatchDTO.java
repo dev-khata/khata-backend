@@ -32,6 +32,12 @@ public class RawMaterialStockBatchDTO {
     @NotNull(message = "Party cannot be null.")
     private Integer partyId;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Integer fiscalYearId;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String fiscalYearName;
+
     @JsonAlias("purchaseNepaliDate")
     @NotBlank(message = "Nepali purchase date cannot be blank.")
     @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Nepali purchase date must be in yyyy-MM-dd format.")

@@ -11,7 +11,10 @@ public interface RawMaterialStockBatchService {
 
     RawMaterialStockBatchDTO getRawMaterialStockBatchById(Integer rawMaterialId, Integer stockBatchId);
 
-    Page<RawMaterialStockBatchDTO> getRawMaterialStockBatchesByRawMaterialId(Integer rawMaterialId, Pageable pageable);
+    Page<RawMaterialStockBatchDTO> getRawMaterialStockBatchesByRawMaterialId(
+            Integer rawMaterialId,
+            Integer fiscalYearId,
+            Pageable pageable);
 
     void deleteRawMaterialStockBatch(Integer rawMaterialId, Integer stockBatchId);
 }

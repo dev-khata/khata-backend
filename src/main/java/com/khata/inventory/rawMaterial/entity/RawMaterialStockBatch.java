@@ -1,6 +1,7 @@
 package com.khata.inventory.rawMaterial.entity;
 
 import com.khata.party.entity.Party;
+import com.khata.settings.basicSettings.fiscalYear.entity.FiscalYear;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,6 +31,10 @@ public class RawMaterialStockBatch {
     @ManyToOne
     @JoinColumn(name = "party_id", nullable = false)
     private Party party;
+
+    @ManyToOne
+    @JoinColumn(name = "fiscal_year_id", nullable = false)
+    private FiscalYear fiscalYear;
 
     @Column(nullable = false, length = 10)
     private String purchaseDateNepali;

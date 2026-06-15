@@ -1,6 +1,5 @@
 package com.khata.party.controller;
 
-import com.khata.party.dto.PartyDTO;
 import com.khata.party.dto.PartyRecordDTO;
 import com.khata.party.service.PartyRecordService;
 import com.khata.payload.ApiResponse;
@@ -30,8 +29,11 @@ public class PartyRecordController {
     }
 
     @GetMapping("/{partyId}")
-    public ResponseEntity<ApiResponse<Page<PartyRecordDTO>>> getPartyRecords(@PathVariable Integer partyId, Pageable pageable) {
-        Page<PartyRecordDTO> recordsPage = partyRecordService.getPartyRecordsByPartyId(partyId, pageable);
+    public ResponseEntity<ApiResponse<Page<PartyRecordDTO>>> getPartyRecords(
+            @PathVariable Integer partyId,
+            @RequestParam(required = false) Integer fiscalYearId,
+            Pageable pageable) {
+        Page<PartyRecordDTO> recordsPage = partyRecordService.getPartyRecordsByPartyId(partyId, fiscalYearId, pageable);
         return ResponseEntity.ok(new ApiResponse<>(recordsPage, HttpStatus.OK.value()));
     }
 

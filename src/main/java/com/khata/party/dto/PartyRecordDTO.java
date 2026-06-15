@@ -1,5 +1,6 @@
 package com.khata.party.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.khata.party.entity.enums.TransactionType;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -32,6 +33,12 @@ public class PartyRecordDTO {
 
     @NotNull(message = "English date cannot be null.")
     private LocalDate englishDate;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Integer fiscalYearId;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String fiscalYearName;
 
     @NotNull(message = "Transaction type cannot be null.")
     private TransactionType transactionType;

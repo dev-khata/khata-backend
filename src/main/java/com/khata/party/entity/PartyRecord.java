@@ -1,6 +1,7 @@
 package com.khata.party.entity;
 
 import com.khata.party.entity.enums.TransactionType;
+import com.khata.settings.basicSettings.fiscalYear.entity.FiscalYear;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,6 +31,10 @@ public class PartyRecord {
 
     @Column(nullable = false)
     private LocalDate englishDate;
+
+    @ManyToOne
+    @JoinColumn(name = "fiscal_year_id", nullable = false)
+    private FiscalYear fiscalYear;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 100)

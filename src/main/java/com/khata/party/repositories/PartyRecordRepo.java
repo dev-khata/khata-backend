@@ -7,5 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PartyRecordRepo extends JpaRepository<PartyRecord, Integer> {
     Page<PartyRecord> findByPartyIdAndParticularContainingIgnoreCase(Integer partyId, String particular, Pageable pageable);
+
     Page<PartyRecord> findByPartyId(Integer partyId, Pageable pageable);
+
+    Page<PartyRecord> findByPartyIdAndFiscalYearId(Integer partyId, Integer fiscalYearId, Pageable pageable);
 }

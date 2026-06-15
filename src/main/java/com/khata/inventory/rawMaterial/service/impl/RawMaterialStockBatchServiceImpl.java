@@ -11,6 +11,8 @@ import com.khata.inventory.rawMaterial.entity.RawMaterialStockBatch;
 import com.khata.inventory.rawMaterial.repositories.RawMaterialRepo;
 import com.khata.inventory.rawMaterial.repositories.RawMaterialStockBatchRepo;
 import com.khata.inventory.rawMaterial.service.RawMaterialStockBatchService;
+import com.khata.settings.basicSettings.fiscalYear.entity.FiscalYear;
+import com.khata.settings.basicSettings.fiscalYear.services.FiscalYearService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Service
 @Slf4j
@@ -29,6 +32,7 @@ public class RawMaterialStockBatchServiceImpl implements RawMaterialStockBatchSe
     private final RawMaterialRepo rawMaterialRepo;
     private final PartyRepo partyRepo;
     private final UserService userService;
+    private final FiscalYearService fiscalYearService;
 
     @Override
     @Transactional
@@ -70,10 +74,17 @@ public class RawMaterialStockBatchServiceImpl implements RawMaterialStockBatchSe
 
     @Override
     @Transactional(readOnly = true)
-    public Page<RawMaterialStockBatchDTO> getRawMaterialStockBatchesByRawMaterialId(Integer rawMaterialId, Pageable pageable) {
+    public Page<RawMaterialStockBatchDTO> getRawMaterialStockBatchesByRawMaterialId(
+            Integer rawMaterialId,
+            Integer fiscalYearId,
+            Pageable pageable) {
         Integer currentUserId = userService.getCurrentUserId();
         getRawMaterialEntityById(rawMaterialId, currentUserId);
-        Page<RawMaterialStockBatch> stockBatches = stockBatchRepo.findByRawMaterialIdAndCreatedUserId(rawMaterialId, currentUserId, pageable);
+        Integer selectedFiscalYearId = fiscalYearId == null
+                ? fiscalYearService.getOrCreateByDate(LocalDate.now()).getId()
+                : fiscalYearId;
+        Page<RawMaterialStockBatch> stockBatches = stockBatchRepo.findByRawMaterialIdAndCreatedUserIdAndFiscalYearId(
+                rawMaterialId, currentUserId, selectedFiscalYearId, pageable);
         return stockBatches.map(this::mapToDTO);
     }
 
@@ -105,6 +116,7 @@ public class RawMaterialStockBatchServiceImpl implements RawMaterialStockBatchSe
         stockBatch.setParty(party);
         stockBatch.setPurchaseDateNepali(stockBatchDTO.getPurchaseDateNepali());
         stockBatch.setPurchaseDateEnglish(stockBatchDTO.getPurchaseDateEnglish());
+        stockBatch.setFiscalYear(fiscalYearService.getOrCreateByDate(stockBatchDTO.getPurchaseDateEnglish()));
         stockBatch.setRollCount(stockBatchDTO.getRollCount());
         stockBatch.setTotalQuantity(stockBatchDTO.getTotalQuantity());
         stockBatch.setRemainingQuantity(remainingQuantity);
@@ -140,6 +152,11 @@ public class RawMaterialStockBatchServiceImpl implements RawMaterialStockBatchSe
         stockBatchDTO.setBatchNumber(stockBatch.getBatchNumber());
         stockBatchDTO.setRawMaterialId(stockBatch.getRawMaterial().getId());
         stockBatchDTO.setPartyId(stockBatch.getParty().getId());
+        FiscalYear fiscalYear = stockBatch.getFiscalYear();
+        if (fiscalYear != null) {
+            stockBatchDTO.setFiscalYearId(fiscalYear.getId());
+            stockBatchDTO.setFiscalYearName(fiscalYear.getFiscalYearName());
+        }
         stockBatchDTO.setPurchaseDateNepali(stockBatch.getPurchaseDateNepali());
         stockBatchDTO.setPurchaseDateEnglish(stockBatch.getPurchaseDateEnglish());
         stockBatchDTO.setRollCount(stockBatch.getRollCount());

@@ -18,7 +18,7 @@ public interface PartyRecordService {
 
     void deletePartyRecord(Integer partyRecordId);
 
-    Page<PartyRecordDTO> getPartyRecordsByPartyId(Integer partyId, Pageable pageable);
+    Page<PartyRecordDTO> getPartyRecordsByPartyId(Integer partyId, Integer fiscalYearId, Pageable pageable);
 
     void createPartyRecordWithOpeningBalance(PartyRecordDTO partyRecordDTO, Party party);
 

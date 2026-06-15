@@ -35,8 +35,10 @@ public class RawMaterialStockBatchController {
     @GetMapping
     public ResponseEntity<ApiResponse<PaginationResponse<RawMaterialStockBatchDTO>>> getRawMaterialStockBatchesByRawMaterialId(
             @PathVariable Integer materialId,
+            @RequestParam(required = false) Integer fiscalYearId,
             Pageable pageable) {
-        Page<RawMaterialStockBatchDTO> stockBatchPage = stockBatchService.getRawMaterialStockBatchesByRawMaterialId(materialId, pageable);
+        Page<RawMaterialStockBatchDTO> stockBatchPage = stockBatchService.getRawMaterialStockBatchesByRawMaterialId(
+                materialId, fiscalYearId, pageable);
         PaginationResponse<RawMaterialStockBatchDTO> paginationPayload = PaginationUtil.buildPaginationResponse(stockBatchPage);
         return ResponseEntity.ok(new ApiResponse<>(paginationPayload, HttpStatus.OK.value()));
     }
