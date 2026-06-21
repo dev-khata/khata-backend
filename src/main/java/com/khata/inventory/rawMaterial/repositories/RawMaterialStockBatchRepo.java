@@ -22,11 +22,24 @@ public interface RawMaterialStockBatchRepo extends JpaRepository<RawMaterialStoc
             Integer fiscalYearId,
             Pageable pageable);
 
-    @Query("select coalesce(sum(batch.rollCount), 0) from RawMaterialStockBatch batch where batch.rawMaterial.id = :rawMaterialId and batch.createdUserId = :createdUserId")
+    @Query("""
+            select batch
+            from RawMaterialStockBatch batch
+            where batch.rawMaterial.id = :rawMaterialId
+              and batch.createdUserId = :createdUserId
+              and batch.availableRolls > 0
+              and batch.availableQuantity > 0
+            order by batch.purchaseDateEnglish asc, batch.id asc
+            """)
+    List<RawMaterialStockBatch> findAvailableBatchesForIssue(
+            @Param("rawMaterialId") Integer rawMaterialId,
+            @Param("createdUserId") Integer createdUserId);
+
+    @Query("select coalesce(sum(batch.availableRolls), 0) from RawMaterialStockBatch batch where batch.rawMaterial.id = :rawMaterialId and batch.createdUserId = :createdUserId")
     Long sumRollCountByRawMaterialIdAndCreatedUserId(@Param("rawMaterialId") Integer rawMaterialId, @Param("createdUserId") Integer createdUserId);
 
     @Query("""
-            select batch.rawMaterial.id as rawMaterialId, coalesce(sum(batch.rollCount), 0) as totalRollCount
+            select batch.rawMaterial.id as rawMaterialId, coalesce(sum(batch.availableRolls), 0) as totalRollCount
             from RawMaterialStockBatch batch
             where batch.rawMaterial.id in :rawMaterialIds and batch.createdUserId = :createdUserId
             group by batch.rawMaterial.id
@@ -34,4 +47,11 @@ public interface RawMaterialStockBatchRepo extends JpaRepository<RawMaterialStoc
     List<RawMaterialRollCountProjection> sumRollCountsByRawMaterialIdsAndCreatedUserId(
             @Param("rawMaterialIds") List<Integer> rawMaterialIds,
             @Param("createdUserId") Integer createdUserId);
+
+    @Query("""
+            select count(stockIssue)
+            from ProductionLotStockIssue stockIssue
+            where stockIssue.stockBatch.id = :stockBatchId
+            """)
+    long countProductionLotIssuesByStockBatchId(@Param("stockBatchId") Integer stockBatchId);
 }

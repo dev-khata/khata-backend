@@ -47,23 +47,27 @@ public class RawMaterialStockBatchDTO {
     @NotNull(message = "English purchase date cannot be null.")
     private LocalDate purchaseDateEnglish;
 
-    @NotNull(message = "Roll count cannot be null.")
-    @Min(value = 0, message = "Roll count must be greater than or equal to 0.")
-    private Integer rollCount;
+    @JsonAlias("rollCount")
+    @NotNull(message = "Total rolls purchased cannot be null.")
+    @Min(value = 0, message = "Total rolls purchased must be greater than or equal to 0.")
+    private Integer totalRollsPurchased;
 
-    @NotNull(message = "Total quantity cannot be null.")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Total quantity must be greater than 0.")
-    private BigDecimal totalQuantity;
+    @JsonAlias("totalQuantity")
+    @NotNull(message = "Total quantity purchased cannot be null.")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Total quantity purchased must be greater than 0.")
+    private BigDecimal totalQuantityPurchased;
 
-    @DecimalMin(value = "0.0", inclusive = true, message = "Remaining quantity must be greater than or equal to 0.")
-    private BigDecimal remainingQuantity;
+    @JsonAlias("availableRollCount")
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Integer availableRolls;
+
+    @JsonAlias("remainingQuantity")
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private BigDecimal availableQuantity;
 
     @NotNull(message = "Purchase rate cannot be null.")
     @DecimalMin(value = "0.0", inclusive = true, message = "Purchase rate must be greater than or equal to 0.")
     private BigDecimal purchaseRate;
-
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private BigDecimal totalAmount;
 
     private String materialCode;
 

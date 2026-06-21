@@ -43,19 +43,19 @@ public class RawMaterialStockBatch {
     private LocalDate purchaseDateEnglish;
 
     @Column(nullable = false)
-    private Integer rollCount;
+    private Integer totalRollsPurchased;
 
     @Column(nullable = false, precision = 19, scale = 2)
-    private BigDecimal totalQuantity;
+    private BigDecimal totalQuantityPurchased;
+
+    @Column(nullable = false)
+    private Integer availableRolls;
 
     @Column(nullable = false, precision = 19, scale = 2)
-    private BigDecimal remainingQuantity;
+    private BigDecimal availableQuantity;
 
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal purchaseRate;
-
-    @Column(nullable = false, precision = 19, scale = 2)
-    private BigDecimal totalAmount;
 
     @Column(nullable = false, name = "created_user_id")
     private Integer createdUserId;

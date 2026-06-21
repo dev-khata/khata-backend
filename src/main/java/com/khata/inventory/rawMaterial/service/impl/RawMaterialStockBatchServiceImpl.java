@@ -93,6 +93,9 @@ public class RawMaterialStockBatchServiceImpl implements RawMaterialStockBatchSe
     public void deleteRawMaterialStockBatch(Integer rawMaterialId, Integer stockBatchId) {
         Integer currentUserId = userService.getCurrentUserId();
         RawMaterialStockBatch stockBatch = getStockBatchEntityById(stockBatchId, rawMaterialId, currentUserId);
+        if (stockBatchRepo.countProductionLotIssuesByStockBatchId(stockBatchId) > 0) {
+            throw new BadRequestException("Cannot delete this stock batch because it has already been issued to a production lot. Delete the related production lot first, then delete this stock batch.");
+        }
         stockBatchRepo.delete(stockBatch);
         log.info("Raw material stock batch deleted | id={}", stockBatchId);
     }
@@ -103,12 +106,22 @@ public class RawMaterialStockBatchServiceImpl implements RawMaterialStockBatchSe
             RawMaterial rawMaterial,
             Party party,
             Integer currentUserId) {
-        BigDecimal remainingQuantity = stockBatchDTO.getRemainingQuantity() == null
-                ? stockBatchDTO.getTotalQuantity()
-                : stockBatchDTO.getRemainingQuantity();
+        Integer consumedRolls = stockBatch.getId() == null
+                ? 0
+                : stockBatch.getTotalRollsPurchased() - stockBatch.getAvailableRolls();
+        BigDecimal consumedQuantity = stockBatch.getId() == null
+                ? BigDecimal.ZERO
+                : stockBatch.getTotalQuantityPurchased().subtract(stockBatch.getAvailableQuantity());
 
-        if (remainingQuantity.compareTo(stockBatchDTO.getTotalQuantity()) > 0) {
-            throw new BadRequestException("Remaining quantity cannot be greater than total quantity.");
+        Integer availableRolls = stockBatchDTO.getTotalRollsPurchased() - consumedRolls;
+        BigDecimal availableQuantity = stockBatchDTO.getTotalQuantityPurchased().subtract(consumedQuantity);
+
+        if (availableRolls < 0) {
+            throw new BadRequestException("Total rolls purchased cannot be less than already issued rolls.");
+        }
+
+        if (availableQuantity.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BadRequestException("Total quantity purchased cannot be less than already issued quantity.");
         }
 
         stockBatch.setBatchNumber(stockBatchDTO.getBatchNumber());
@@ -117,11 +130,11 @@ public class RawMaterialStockBatchServiceImpl implements RawMaterialStockBatchSe
         stockBatch.setPurchaseDateNepali(stockBatchDTO.getPurchaseDateNepali());
         stockBatch.setPurchaseDateEnglish(stockBatchDTO.getPurchaseDateEnglish());
         stockBatch.setFiscalYear(fiscalYearService.getOrCreateByDate(stockBatchDTO.getPurchaseDateEnglish()));
-        stockBatch.setRollCount(stockBatchDTO.getRollCount());
-        stockBatch.setTotalQuantity(stockBatchDTO.getTotalQuantity());
-        stockBatch.setRemainingQuantity(remainingQuantity);
+        stockBatch.setTotalRollsPurchased(stockBatchDTO.getTotalRollsPurchased());
+        stockBatch.setTotalQuantityPurchased(stockBatchDTO.getTotalQuantityPurchased());
+        stockBatch.setAvailableRolls(availableRolls);
+        stockBatch.setAvailableQuantity(availableQuantity);
         stockBatch.setPurchaseRate(stockBatchDTO.getPurchaseRate());
-        stockBatch.setTotalAmount(stockBatchDTO.getTotalQuantity().multiply(stockBatchDTO.getPurchaseRate()));
         stockBatch.setCreatedUserId(currentUserId);
     }
 
@@ -159,11 +172,11 @@ public class RawMaterialStockBatchServiceImpl implements RawMaterialStockBatchSe
         }
         stockBatchDTO.setPurchaseDateNepali(stockBatch.getPurchaseDateNepali());
         stockBatchDTO.setPurchaseDateEnglish(stockBatch.getPurchaseDateEnglish());
-        stockBatchDTO.setRollCount(stockBatch.getRollCount());
-        stockBatchDTO.setTotalQuantity(stockBatch.getTotalQuantity());
-        stockBatchDTO.setRemainingQuantity(stockBatch.getRemainingQuantity());
+        stockBatchDTO.setTotalRollsPurchased(stockBatch.getTotalRollsPurchased());
+        stockBatchDTO.setTotalQuantityPurchased(stockBatch.getTotalQuantityPurchased());
+        stockBatchDTO.setAvailableRolls(stockBatch.getAvailableRolls());
+        stockBatchDTO.setAvailableQuantity(stockBatch.getAvailableQuantity());
         stockBatchDTO.setPurchaseRate(stockBatch.getPurchaseRate());
-        stockBatchDTO.setTotalAmount(stockBatch.getTotalAmount());
         stockBatchDTO.setMaterialCode(stockBatch.getRawMaterial().getMaterialCode());
         stockBatchDTO.setMaterialName(stockBatch.getRawMaterial().getMaterialName());
         stockBatchDTO.setPartyName(stockBatch.getParty().getName());
