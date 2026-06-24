@@ -1,10 +1,13 @@
 package com.khata.party.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.khata.party.entity.enums.PartyType;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 
 @NoArgsConstructor
 @Getter
@@ -44,4 +47,7 @@ public class PartyDTO {
     
     @NotNull(message = "Party type cannot be null")
     private PartyType partyType;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private BigDecimal netBalance;
 }

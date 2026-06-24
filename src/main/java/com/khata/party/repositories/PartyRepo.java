@@ -14,7 +14,9 @@ public interface PartyRepo extends JpaRepository<Party, Integer> {
 
     Optional<Party> findByPhoneNumberAndCreatedUserID(String phoneNumber, Integer createdUserID);
 
-    Page<Party> findByNameContainingIgnoreCase(String name, Pageable pageable);
+    Optional<Party> findByIdAndCreatedUserID(Integer id, Integer createdUserID);
+
+    Page<Party> findByNameContainingIgnoreCaseAndCreatedUserID(String name, Integer createdUserID, Pageable pageable);
 
     Page<Party> findByCreatedUserID(Integer createdUserID, Pageable pageable);
 }

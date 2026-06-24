@@ -1,6 +1,5 @@
 package com.khata.party.service.impl;
 
-import com.khata.auth.service.AuthService;
 import com.khata.auth.service.UserService;
 import com.khata.exceptions.ResourceAlreadyExistsException;
 import com.khata.exceptions.ResourceNotFoundException;
@@ -8,6 +7,7 @@ import com.khata.party.dto.PartyDTO;
 import com.khata.party.dto.PartyOnboardingDTO;
 import com.khata.party.dto.PartyRecordDTO;
 import com.khata.party.entity.Party;
+import com.khata.party.repositories.PartyRecordRepo;
 import com.khata.party.repositories.PartyRepo;
 import com.khata.party.service.PartyRecordService;
 import com.khata.party.service.PartyService;
@@ -24,16 +24,21 @@ import org.springframework.transaction.annotation.Transactional;
 public class PartyServiceImpl implements PartyService {
 
     private final PartyRepo partyRepo;
+    private final PartyRecordRepo partyRecordRepo;
     private final ModelMapper modelMapper;
     private final PartyRecordService partyRecordService;
-    private final AuthService authService;
     private final UserService userService;
 
-    public PartyServiceImpl(PartyRepo partyRepo, ModelMapper modelMapper, PartyRecordService partyRecordService, AuthService authService, UserService userService) {
+    public PartyServiceImpl(
+            PartyRepo partyRepo,
+            PartyRecordRepo partyRecordRepo,
+            ModelMapper modelMapper,
+            PartyRecordService partyRecordService,
+            UserService userService) {
         this.modelMapper = modelMapper;
         this.partyRepo = partyRepo;
+        this.partyRecordRepo = partyRecordRepo;
         this.partyRecordService = partyRecordService;
-        this.authService = authService;
         this.userService = userService;
     }
 
@@ -49,7 +54,7 @@ public class PartyServiceImpl implements PartyService {
         Party savedParty = partyRepo.save(party);
         log.info("Party created successfully | name={}", savedParty.getName());
         partyRecordService.createPartyRecordWithOpeningBalance(partyRecordDTO, savedParty);
-        return modelMapper.map(savedParty, PartyDTO.class);
+        return mapToDTO(savedParty);
     }
 
     @Override
@@ -71,14 +76,14 @@ public class PartyServiceImpl implements PartyService {
         party.setCbf(partyDTO.getCbf());
         Party updatedParty = partyRepo.save(party);
         log.info("Party updated with ID: {}", partyId);
-        return modelMapper.map(updatedParty, PartyDTO.class);
+        return mapToDTO(updatedParty);
     }
 
     @Override
     @Transactional(readOnly = true)
     public PartyDTO getPartyById(Integer partyId) {
         Party party = getPartyEntityById(partyId);
-        return modelMapper.map(party, PartyDTO.class);
+        return mapToDTO(party);
     }
 
     @Override
@@ -86,14 +91,15 @@ public class PartyServiceImpl implements PartyService {
     public Page<PartyDTO> getParties(Pageable pageable) {
         Integer currentUserId = userService.getCurrentUserId();
         Page<Party> parties = partyRepo.findByCreatedUserID(currentUserId, pageable);
-        return parties.map(party -> modelMapper.map(party, PartyDTO.class));
+        return parties.map(this::mapToDTO);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<PartyDTO> searchPartyByName(String name, Pageable pageable) {
-        Page<Party> parties = partyRepo.findByNameContainingIgnoreCase(name, pageable);
-        return parties.map(party -> modelMapper.map(party, PartyDTO.class));
+        Integer currentUserId = userService.getCurrentUserId();
+        Page<Party> parties = partyRepo.findByNameContainingIgnoreCaseAndCreatedUserID(name, currentUserId, pageable);
+        return parties.map(this::mapToDTO);
     }
 
     @Override
@@ -104,9 +110,17 @@ public class PartyServiceImpl implements PartyService {
     }
 
     private Party getPartyEntityById(Integer partyId) {
-        return partyRepo.findById(partyId).orElseThrow(
+        Integer currentUserId = userService.getCurrentUserId();
+        return partyRepo.findByIdAndCreatedUserID(partyId, currentUserId).orElseThrow(
                 () -> new ResourceNotFoundException("Party", "id", partyId)
         );
+    }
+
+    private PartyDTO mapToDTO(Party party) {
+        PartyDTO partyDTO = modelMapper.map(party, PartyDTO.class);
+        partyDTO.setNetBalance(partyRecordRepo.calculateNetBalanceByPartyIdAndCreatedUserId(
+                party.getId(), userService.getCurrentUserId()));
+        return partyDTO;
     }
 
     private void checkEmailIfExists(String email) {

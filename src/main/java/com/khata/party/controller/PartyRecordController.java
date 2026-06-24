@@ -1,12 +1,12 @@
 package com.khata.party.controller;
 
 import com.khata.party.dto.PartyRecordDTO;
+import com.khata.party.dto.PartyRecordPaginationResponse;
 import com.khata.party.service.PartyRecordService;
 import com.khata.payload.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,11 +29,11 @@ public class PartyRecordController {
     }
 
     @GetMapping("/{partyId}")
-    public ResponseEntity<ApiResponse<Page<PartyRecordDTO>>> getPartyRecords(
+    public ResponseEntity<ApiResponse<PartyRecordPaginationResponse>> getPartyRecords(
             @PathVariable Integer partyId,
             @RequestParam(required = false) Integer fiscalYearId,
             Pageable pageable) {
-        Page<PartyRecordDTO> recordsPage = partyRecordService.getPartyRecordsByPartyId(partyId, fiscalYearId, pageable);
+        PartyRecordPaginationResponse recordsPage = partyRecordService.getPartyRecordsByPartyId(partyId, fiscalYearId, pageable);
         return ResponseEntity.ok(new ApiResponse<>(recordsPage, HttpStatus.OK.value()));
     }
 

@@ -1,6 +1,7 @@
 package com.khata.party.service;
 
 import com.khata.party.dto.PartyRecordDTO;
+import com.khata.party.dto.PartyRecordPaginationResponse;
 import com.khata.party.entity.Party;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,7 +19,7 @@ public interface PartyRecordService {
 
     void deletePartyRecord(Integer partyRecordId);
 
-    Page<PartyRecordDTO> getPartyRecordsByPartyId(Integer partyId, Integer fiscalYearId, Pageable pageable);
+    PartyRecordPaginationResponse getPartyRecordsByPartyId(Integer partyId, Integer fiscalYearId, Pageable pageable);
 
     void createPartyRecordWithOpeningBalance(PartyRecordDTO partyRecordDTO, Party party);
 

@@ -1,9 +1,13 @@
 package com.khata.party.service.impl;
 
+import com.khata.auth.service.UserService;
 import com.khata.exceptions.ResourceNotFoundException;
 import com.khata.party.dto.PartyRecordDTO;
+import com.khata.party.dto.PartyRecordPaginationResponse;
+import com.khata.party.dto.PartyRecordSummaryDTO;
 import com.khata.party.entity.Party;
 import com.khata.party.entity.PartyRecord;
+import com.khata.party.entity.enums.TransactionType;
 import com.khata.party.repositories.PartyRecordRepo;
 import com.khata.party.repositories.PartyRepo;
 import com.khata.party.service.PartyRecordService;
@@ -16,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Service
@@ -26,22 +31,25 @@ public class PartyRecordServiceImpl implements PartyRecordService {
     private final ModelMapper modelMapper;
     private final PartyRepo partyRepo;
     private final FiscalYearService fiscalYearService;
+    private final UserService userService;
 
     public PartyRecordServiceImpl(
             PartyRecordRepo partyRecordRepo,
             ModelMapper modelMapper,
             PartyRepo partyRepo,
-            FiscalYearService fiscalYearService) {
+            FiscalYearService fiscalYearService,
+            UserService userService) {
         this.partyRecordRepo = partyRecordRepo;
         this.modelMapper = modelMapper;
         this.partyRepo = partyRepo;
         this.fiscalYearService = fiscalYearService;
+        this.userService = userService;
     }
 
     @Override
     @Transactional
     public PartyRecordDTO createPartyRecord(PartyRecordDTO partyRecordDTO) {
-        Party party = getPartyEntityById(partyRecordDTO.getPartyId());
+        Party party = getCurrentUserPartyById(partyRecordDTO.getPartyId());
         PartyRecord partyRecord = modelMapper.map(partyRecordDTO, PartyRecord.class);
         partyRecord.setParty(party);
         partyRecord.setFiscalYear(fiscalYearService.getOrCreateByDate(partyRecordDTO.getEnglishDate()));
@@ -70,7 +78,7 @@ public class PartyRecordServiceImpl implements PartyRecordService {
 
     @Override
     public Page<PartyRecordDTO> findBypParticularContainingIgnoreCase(Integer partyId, String particular, Pageable pageable) {
-        Party party = getPartyEntityById(partyId);
+        getCurrentUserPartyById(partyId);
         Page<PartyRecord> partyRecords = partyRecordRepo.findByPartyIdAndParticularContainingIgnoreCase(partyId, particular, pageable);
         return partyRecords.map(this::mapToDTO);
     }
@@ -81,13 +89,31 @@ public class PartyRecordServiceImpl implements PartyRecordService {
     }
 
     @Override
-    public Page<PartyRecordDTO> getPartyRecordsByPartyId(Integer partyId, Integer fiscalYearId, Pageable pageable) {
+    public PartyRecordPaginationResponse getPartyRecordsByPartyId(Integer partyId, Integer fiscalYearId, Pageable pageable) {
+        Integer currentUserId = userService.getCurrentUserId();
+        getPartyEntityByIdAndCreatedUserId(partyId, currentUserId);
         Integer selectedFiscalYearId = fiscalYearId == null
                 ? fiscalYearService.getOrCreateByDate(LocalDate.now()).getId()
                 : fiscalYearId;
-        Page<PartyRecord> partyRecords = partyRecordRepo.findByPartyIdAndFiscalYearId(
-                partyId, selectedFiscalYearId, pageable);
-        return partyRecords.map(this::mapToDTO);
+        Page<PartyRecordDTO> partyRecords = partyRecordRepo.findByPartyIdAndCreatedUserIdAndFiscalYearId(
+                partyId, currentUserId, selectedFiscalYearId, pageable).map(this::mapToDTO);
+
+        BigDecimal totalDebit = partyRecordRepo.calculateTotalByPartyIdAndCreatedUserIdAndFiscalYearIdAndTransactionType(
+                partyId, currentUserId, selectedFiscalYearId, TransactionType.DEBIT);
+        BigDecimal totalCredit = partyRecordRepo.calculateTotalByPartyIdAndCreatedUserIdAndFiscalYearIdAndTransactionType(
+                partyId, currentUserId, selectedFiscalYearId, TransactionType.CREDIT);
+        PartyRecordSummaryDTO summary = new PartyRecordSummaryDTO(
+                totalDebit,
+                totalCredit,
+                totalDebit.subtract(totalCredit));
+
+        return new PartyRecordPaginationResponse(
+                partyRecords.getContent(),
+                partyRecords.getNumber(),
+                partyRecords.getSize(),
+                partyRecords.getTotalElements(),
+                partyRecords.getTotalPages(),
+                summary);
     }
 
     @Override
@@ -100,8 +126,15 @@ public class PartyRecordServiceImpl implements PartyRecordService {
         partyRecordRepo.save(partyRecord);
     }
 
-    private Party getPartyEntityById(Integer partyId) {
-        return partyRepo.findById(partyId).orElseThrow(
+    private Party getCurrentUserPartyById(Integer partyId) {
+        Integer currentUserId = userService.getCurrentUserId();
+        return partyRepo.findByIdAndCreatedUserID(partyId, currentUserId).orElseThrow(
+                () -> new ResourceNotFoundException("Party", "id", partyId)
+        );
+    }
+
+    private Party getPartyEntityByIdAndCreatedUserId(Integer partyId, Integer createdUserId) {
+        return partyRepo.findByIdAndCreatedUserID(partyId, createdUserId).orElseThrow(
                 () -> new ResourceNotFoundException("Party", "id", partyId)
         );
     }
