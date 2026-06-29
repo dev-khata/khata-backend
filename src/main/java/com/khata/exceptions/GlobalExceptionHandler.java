@@ -1,15 +1,16 @@
 package com.khata.exceptions;
 
 import com.khata.payload.ApiResponse;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Global exception handler for the application that catches various exceptions
@@ -57,15 +58,12 @@ public class GlobalExceptionHandler {
      * corresponding validation error messages
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleMethodArgsNotValidException(MethodArgumentNotValidException ex) {
-        Map<String, String> responseError = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach(
-                (error) -> {
-                    String fieldName = ((FieldError) error).getField();
-                    String message = error.getDefaultMessage();
-                    responseError.put(fieldName, message);
-                });
-        return new ResponseEntity<Map<String, String>>(responseError, HttpStatus.BAD_REQUEST);
+    public ResponseEntity<ApiResponse<Object>> handleMethodArgsNotValidException(MethodArgumentNotValidException ex) {
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .map(this::formatFieldError)
+                .collect(Collectors.joining(", "));
+        ApiResponse<Object> apiResponse = new ApiResponse<>(null, HttpStatus.BAD_REQUEST.value(), message);
+        return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
     }
 
     /**
@@ -112,7 +110,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleJwtTokenException(JwtTokenException ex) {
         String message = ex.getMessage();
         ApiResponse<Object> apiResponse = new ApiResponse<>(null, HttpStatus.UNAUTHORIZED.value(), message);
-        return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(apiResponse, HttpStatus.UNAUTHORIZED);
     }
 
 
@@ -121,6 +119,35 @@ public class GlobalExceptionHandler {
         String message = ex.getMessage();
         ApiResponse<Object> apiResponse = new ApiResponse<>(null, HttpStatus.BAD_REQUEST.value(), message);
         return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
+        String message = ex.getMessage();
+        ApiResponse<Object> apiResponse = new ApiResponse<>(null, HttpStatus.BAD_REQUEST.value(), message);
+        return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Object>> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+        ApiResponse<Object> apiResponse = new ApiResponse<>(
+                null,
+                HttpStatus.BAD_REQUEST.value(),
+                "Request body is invalid. Please check the submitted data format.");
+        return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+        ApiResponse<Object> apiResponse = new ApiResponse<>(
+                null,
+                HttpStatus.CONFLICT.value(),
+                "This action cannot be completed because related data already exists or a duplicate value was submitted.");
+        return new ResponseEntity<>(apiResponse, HttpStatus.CONFLICT);
+    }
+
+    private String formatFieldError(FieldError fieldError) {
+        return fieldError.getField() + ": " + fieldError.getDefaultMessage();
     }
 
 }

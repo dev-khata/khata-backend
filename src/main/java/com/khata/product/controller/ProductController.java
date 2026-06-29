@@ -1,8 +1,10 @@
 package com.khata.product.controller;
 
 import com.khata.payload.ApiResponse;
+import com.khata.payload.PaginationResponse;
 import com.khata.product.dto.ProductDTO;
 import com.khata.product.service.ProductService;
+import com.khata.utils.PaginationUtil;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 
@@ -28,9 +30,10 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<ProductDTO>>> getProducts(Pageable pageable){
-        Page<ProductDTO> product = productService.getProducts(pageable);
-        return ResponseEntity.ok(new ApiResponse<>(product, HttpStatus.OK.value()));
+    public ResponseEntity<ApiResponse<PaginationResponse<ProductDTO>>> getProducts(Pageable pageable){
+        Page<ProductDTO> productPage = productService.getProducts(pageable);
+        PaginationResponse<ProductDTO> paginationPayload = PaginationUtil.buildPaginationResponse(productPage);
+        return ResponseEntity.ok(new ApiResponse<>(paginationPayload, HttpStatus.OK.value()));
     }
 
     @PutMapping("/{productId}")
@@ -46,6 +49,15 @@ public class ProductController {
     public ResponseEntity<ApiResponse<ProductDTO>> getProductDetails(@PathVariable Integer productId){
         ProductDTO productDTO = productService.getProductById(productId);
         return ResponseEntity.ok(new ApiResponse<>(productDTO, HttpStatus.OK.value()));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<PaginationResponse<ProductDTO>>> searchProductByName(
+            @RequestParam String keyword,
+            Pageable pageable) {
+        Page<ProductDTO> productPage = productService.searchProductByName(keyword, pageable);
+        PaginationResponse<ProductDTO> paginationPayload = PaginationUtil.buildPaginationResponse(productPage);
+        return ResponseEntity.ok(new ApiResponse<>(paginationPayload, HttpStatus.OK.value()));
     }
 
     @DeleteMapping("/{productId}")

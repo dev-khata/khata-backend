@@ -6,7 +6,7 @@ import com.khata.auth.repositories.UserRepo;
 import com.khata.auth.service.UserService;
 import com.khata.exceptions.ResourceAlreadyExistsException;
 import com.khata.exceptions.ResourceNotFoundException;
-import com.khata.mailVerification.service.MailVerificationService;
+import com.khata.auth.mailVerification.service.MailVerificationService;
 import com.khata.utils.EmailAndPhoneUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;

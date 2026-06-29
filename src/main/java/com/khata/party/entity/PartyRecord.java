@@ -1,6 +1,7 @@
 package com.khata.party.entity;
 
 import com.khata.party.entity.enums.TransactionType;
+import com.khata.settings.basicSettings.fiscalYear.entity.FiscalYear;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,7 +9,6 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 @NoArgsConstructor
 @Entity
@@ -26,11 +26,15 @@ public class PartyRecord {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
 
-    @Column(nullable = false)
-    private LocalDate nepaliDate;
+    @Column(nullable = false, length = 10)
+    private String nepaliDate;
 
     @Column(nullable = false)
     private LocalDate englishDate;
+
+    @ManyToOne
+    @JoinColumn(name = "fiscal_year_id", nullable = false)
+    private FiscalYear fiscalYear;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 100)

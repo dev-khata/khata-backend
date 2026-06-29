@@ -1,8 +1,11 @@
 package com.khata.party.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.khata.party.entity.enums.TransactionType;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,11 +27,18 @@ public class PartyRecordDTO {
     @DecimalMin(value = "0.0", inclusive = true, message = "Amount must be a positive number.")
     private BigDecimal amount;
 
-    @NotNull(message = "Nepali date cannot be null.")
-    private LocalDate nepaliDate;
+    @NotBlank(message = "Nepali date cannot be blank.")
+    @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Nepali date must be in yyyy-MM-dd format.")
+    private String nepaliDate;
 
     @NotNull(message = "English date cannot be null.")
     private LocalDate englishDate;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private Integer fiscalYearId;
+
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private String fiscalYearName;
 
     @NotNull(message = "Transaction type cannot be null.")
     private TransactionType transactionType;
