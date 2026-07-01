@@ -1,6 +1,7 @@
 package com.khata.product.service.impl;
 
 import com.khata.auth.service.UserService;
+import com.khata.exceptions.BadRequestException;
 import com.khata.exceptions.ResourceAlreadyExistsException;
 import com.khata.exceptions.ResourceNotFoundException;
 import com.khata.product.dto.ProductDTO;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -41,11 +43,13 @@ public class ProductServiceImpl implements ProductService {
     public ProductDTO createProduct(ProductDTO productDTO) {
         Integer currentUserId = userService.getCurrentUserId();
         validateProductCodeIsUnique(productDTO.getProductCode(), null, currentUserId);
-        validateDepartmentRates(productDTO.getDepartmentRates(), currentUserId);
+        Map<Integer, Department> departmentsById = validateDepartmentRates(
+                productDTO.getDepartmentRates(),
+                currentUserId);
 
         Product product = new Product();
         product.setCreatedUserId(currentUserId);
-        setProductFields(product, productDTO, currentUserId);
+        setProductFields(product, productDTO, departmentsById);
 
         Product savedProduct = productRepo.save(product);
         log.info("Product created | id={} | code={}", savedProduct.getId(), savedProduct.getProductCode());
@@ -58,11 +62,13 @@ public class ProductServiceImpl implements ProductService {
         Integer currentUserId = userService.getCurrentUserId();
         Product product = getProductEntityById(productId, currentUserId);
         validateProductCodeIsUnique(productDTO.getProductCode(), productId, currentUserId);
-        validateDepartmentRates(productDTO.getDepartmentRates(), currentUserId);
+        Map<Integer, Department> departmentsById = validateDepartmentRates(
+                productDTO.getDepartmentRates(),
+                currentUserId);
 
         product.setProductCode(productDTO.getProductCode());
         product.setProductName(productDTO.getProductName());
-        syncDepartmentRates(product, productDTO.getDepartmentRates(), currentUserId);
+        syncDepartmentRates(product, productDTO.getDepartmentRates(), departmentsById);
 
         Product updatedProduct = productRepo.save(product);
         log.info("Product updated | id={}", productId);
@@ -82,15 +88,18 @@ public class ProductServiceImpl implements ProductService {
     public Page<ProductDTO> getProducts(Pageable pageable) {
         Integer currentUserId = userService.getCurrentUserId();
         Page<Product> products = productRepo.findByCreatedUserId(currentUserId, pageable);
-        return products.map(this::toProductDTO);
+        return products.map(this::toProductSummaryDTO);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<ProductDTO> searchProductByName(String keyword, Pageable pageable) {
         Integer currentUserId = userService.getCurrentUserId();
-        Page<Product> products = productRepo.findByProductNameContainingIgnoreCaseAndCreatedUserId(keyword, currentUserId, pageable);
-        return products.map(this::toProductDTO);
+        Page<Product> products = productRepo.findByProductNameContainingIgnoreCaseAndCreatedUserId(
+                keyword,
+                currentUserId,
+                pageable);
+        return products.map(this::toProductSummaryDTO);
     }
 
     @Override
@@ -102,11 +111,14 @@ public class ProductServiceImpl implements ProductService {
         log.info("Product deleted | id={}", productId);
     }
 
-    private void setProductFields(Product product, ProductDTO productDTO, Integer currentUserId) {
+    private void setProductFields(
+            Product product,
+            ProductDTO productDTO,
+            Map<Integer, Department> departmentsById) {
         product.setProductCode(productDTO.getProductCode());
         product.setProductName(productDTO.getProductName());
         productDTO.getDepartmentRates().forEach(departmentRateDTO -> {
-            ProductDepartmentRate departmentRate = buildDepartmentRate(product, departmentRateDTO, currentUserId);
+            ProductDepartmentRate departmentRate = buildDepartmentRate(product, departmentRateDTO, departmentsById);
             product.getDepartmentRates().add(departmentRate);
         });
     }
@@ -114,8 +126,8 @@ public class ProductServiceImpl implements ProductService {
     private ProductDepartmentRate buildDepartmentRate(
             Product product,
             ProductDepartmentRateDTO departmentRateDTO,
-            Integer currentUserId) {
-        Department department = getDepartmentEntityById(departmentRateDTO.getDepartmentId(), currentUserId);
+            Map<Integer, Department> departmentsById) {
+        Department department = departmentsById.get(departmentRateDTO.getDepartmentId());
         ProductDepartmentRate departmentRate = new ProductDepartmentRate();
         departmentRate.setProduct(product);
         departmentRate.setDepartment(department);
@@ -126,7 +138,7 @@ public class ProductServiceImpl implements ProductService {
     private void syncDepartmentRates(
             Product product,
             List<ProductDepartmentRateDTO> departmentRateDTOs,
-            Integer currentUserId) {
+            Map<Integer, Department> departmentsById) {
         Set<Integer> requestedDepartmentIds = departmentRateDTOs.stream()
                 .map(ProductDepartmentRateDTO::getDepartmentId)
                 .collect(Collectors.toSet());
@@ -147,7 +159,7 @@ public class ProductServiceImpl implements ProductService {
             if (existingRate != null) {
                 existingRate.setRate(departmentRateDTO.getRate());
             } else {
-                ProductDepartmentRate newRate = buildDepartmentRate(product, departmentRateDTO, currentUserId);
+                ProductDepartmentRate newRate = buildDepartmentRate(product, departmentRateDTO, departmentsById);
                 product.getDepartmentRates().add(newRate);
             }
         }
@@ -172,14 +184,32 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-    private void validateDepartmentRates(List<ProductDepartmentRateDTO> departmentRates, Integer currentUserId) {
+    private Map<Integer, Department> validateDepartmentRates(
+            List<ProductDepartmentRateDTO> departmentRates,
+            Integer currentUserId) {
         Set<Integer> departmentIds = new HashSet<>();
+        Map<Integer, Department> departmentsById = new HashMap<>();
         for (ProductDepartmentRateDTO departmentRate : departmentRates) {
             if (!departmentIds.add(departmentRate.getDepartmentId())) {
                 throw new ResourceAlreadyExistsException("Product department rate", departmentRate.getDepartmentId());
             }
-            getDepartmentEntityById(departmentRate.getDepartmentId(), currentUserId);
+            Department department = getDepartmentEntityById(departmentRate.getDepartmentId(), currentUserId);
+            if (!Boolean.TRUE.equals(department.getPieceRateEnabled())) {
+                throw new BadRequestException("Product department rates can only be added for piece-rate departments.");
+            }
+            departmentsById.put(department.getId(), department);
         }
+        return departmentsById;
+    }
+
+    private ProductDTO toProductSummaryDTO(Product product) {
+        ProductDTO productDTO = new ProductDTO();
+        productDTO.setId(product.getId());
+        productDTO.setProductCode(product.getProductCode());
+        productDTO.setProductName(product.getProductName());
+        productDTO.setCreatedUserId(product.getCreatedUserId());
+        productDTO.setDepartmentRates(List.of());
+        return productDTO;
     }
 
     private ProductDTO toProductDTO(Product product) {
@@ -189,6 +219,7 @@ public class ProductServiceImpl implements ProductService {
         productDTO.setProductName(product.getProductName());
         productDTO.setCreatedUserId(product.getCreatedUserId());
         productDTO.setDepartmentRates(product.getDepartmentRates().stream()
+                .filter(departmentRate -> Boolean.TRUE.equals(departmentRate.getDepartment().getPieceRateEnabled()))
                 .map(this::toProductDepartmentRateDTO)
                 .toList());
         return productDTO;
@@ -198,6 +229,7 @@ public class ProductServiceImpl implements ProductService {
         ProductDepartmentRateDTO departmentRateDTO = new ProductDepartmentRateDTO();
         departmentRateDTO.setId(departmentRate.getId());
         departmentRateDTO.setDepartmentId(departmentRate.getDepartment().getId());
+        departmentRateDTO.setDepartmentCode(departmentRate.getDepartment().getDepartmentCode());
         departmentRateDTO.setDepartmentName(departmentRate.getDepartment().getDepartmentName());
         departmentRateDTO.setRate(departmentRate.getRate());
         return departmentRateDTO;

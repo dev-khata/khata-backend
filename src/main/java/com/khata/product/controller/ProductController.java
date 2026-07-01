@@ -7,15 +7,23 @@ import com.khata.product.service.ProductService;
 import com.khata.utils.PaginationUtil;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/product")
+@RequestMapping({"/api/product", "/api/products"})
 @AllArgsConstructor
 public class ProductController {
 
@@ -23,14 +31,17 @@ public class ProductController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<ApiResponse<ProductDTO>> createProduct(@Valid @RequestBody ProductDTO productDTO){
+    public ResponseEntity<ApiResponse<ProductDTO>> createProduct(@Valid @RequestBody ProductDTO productDTO) {
         ProductDTO product = productService.createProduct(productDTO);
-        ApiResponse<ProductDTO> response = new ApiResponse<>(product, HttpStatus.CREATED.value(), "Product Created Successfully");
+        ApiResponse<ProductDTO> response = new ApiResponse<>(
+                product,
+                HttpStatus.CREATED.value(),
+                "Product Created Successfully");
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<PaginationResponse<ProductDTO>>> getProducts(Pageable pageable){
+    public ResponseEntity<ApiResponse<PaginationResponse<ProductDTO>>> getProducts(Pageable pageable) {
         Page<ProductDTO> productPage = productService.getProducts(pageable);
         PaginationResponse<ProductDTO> paginationPayload = PaginationUtil.buildPaginationResponse(productPage);
         return ResponseEntity.ok(new ApiResponse<>(paginationPayload, HttpStatus.OK.value()));
@@ -39,14 +50,17 @@ public class ProductController {
     @PutMapping("/{productId}")
     public ResponseEntity<ApiResponse<ProductDTO>> updateProduct(
             @Valid @RequestBody ProductDTO productDTO,
-            @PathVariable Integer productId){
+            @PathVariable Integer productId) {
         ProductDTO updatedProduct = productService.updateProduct(productDTO, productId);
-        ApiResponse<ProductDTO> response = new ApiResponse<>(updatedProduct, HttpStatus.OK.value(), "Product Updated Successfully");
+        ApiResponse<ProductDTO> response = new ApiResponse<>(
+                updatedProduct,
+                HttpStatus.OK.value(),
+                "Product Updated Successfully");
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{productId}")
-    public ResponseEntity<ApiResponse<ProductDTO>> getProductDetails(@PathVariable Integer productId){
+    public ResponseEntity<ApiResponse<ProductDTO>> getProductDetails(@PathVariable Integer productId) {
         ProductDTO productDTO = productService.getProductById(productId);
         return ResponseEntity.ok(new ApiResponse<>(productDTO, HttpStatus.OK.value()));
     }
@@ -61,8 +75,8 @@ public class ProductController {
     }
 
     @DeleteMapping("/{productId}")
-    public ResponseEntity<ApiResponse<Void>> deleteProduct(@PathVariable Integer productId){
+    public ResponseEntity<ApiResponse<Void>> deleteProduct(@PathVariable Integer productId) {
         productService.deleteProduct(productId);
-        return ResponseEntity.ok(new ApiResponse<>(null, HttpStatus.OK.value() ,"Product Deleted Successfully"));
+        return ResponseEntity.ok(new ApiResponse<>(null, HttpStatus.OK.value(), "Product Deleted Successfully"));
     }
 }

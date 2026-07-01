@@ -18,6 +18,8 @@ public class ProductDepartmentRateDTO {
     @NotNull(message = "Department cannot be null")
     private Integer departmentId;
 
+    private String departmentCode;
+
     private String departmentName;
 
     @NotNull(message = "Rate cannot be null")
