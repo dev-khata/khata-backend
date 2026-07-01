@@ -59,5 +59,5 @@ public class Employee {
     private Integer createdUserId;
 
     @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<EmployeeDepartment> departments = new ArrayList<>();
+    private List<EmployeeDepartment> departmentAssignments = new ArrayList<>();
 }

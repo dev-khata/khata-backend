@@ -1,7 +1,11 @@
 package com.khata.staff.employee.entity;
 
 import com.khata.settings.department.entity.Department;
+import com.khata.staff.employee.entity.enums.EmployeePaymentType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -13,6 +17,8 @@ import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 
 @NoArgsConstructor
 @Entity
@@ -37,4 +43,11 @@ public class EmployeeDepartment {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id", nullable = false)
     private Department department;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, name = "payment_type", length = 20)
+    private EmployeePaymentType paymentType;
+
+    @Column(name = "monthly_salary", precision = 19, scale = 2)
+    private BigDecimal monthlySalary;
 }

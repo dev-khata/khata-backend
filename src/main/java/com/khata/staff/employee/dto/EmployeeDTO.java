@@ -1,5 +1,6 @@
 package com.khata.staff.employee.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -21,7 +22,7 @@ public class EmployeeDTO {
 
     private Integer id;
 
-    @NotBlank(message = "Employee code cannot be blank.")
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Size(max = 50, message = "Employee code must be less than 50 characters.")
     private String employeeCode;
 
@@ -46,6 +47,6 @@ public class EmployeeDTO {
 
     private Boolean active = true;
 
-    @NotEmpty(message = "At least one department is required.")
-    private List<@Valid EmployeeDepartmentDTO> departments = new ArrayList<>();
+    @NotEmpty(message = "At least one department assignment is required.")
+    private List<@Valid EmployeeDepartmentAssignmentDTO> departmentAssignments = new ArrayList<>();
 }

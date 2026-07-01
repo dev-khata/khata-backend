@@ -10,12 +10,18 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
+@Table(
+        name = "chart_of_account",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_chart_of_account_user_name", columnNames = {"created_user_id", "name"})
+        }
+)
 public class ChartOfAccount {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer Id;
 
-    @Column(nullable = false, length = 100, unique = true)
+    @Column(nullable = false, length = 100)
     private String name;
 
     @Column(length = 300)
@@ -27,5 +33,8 @@ public class ChartOfAccount {
 
     private boolean isActive = true;
 
-    private  boolean isSystemDefault = false;
+    private boolean isSystemDefault = false;
+
+    @Column(name = "created_user_id")
+    private Integer createdUserId;
 }

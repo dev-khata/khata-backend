@@ -15,7 +15,9 @@ public class AccountTypeInitializer {
     CommandLineRunner initAccountTypes(AccountTypeRepo accountTypeRepo){
         return args -> {
             for (DefaultAccountTypes predefinedAccountType : DefaultAccountTypes.values()){
-                accountTypeRepo.findByName(predefinedAccountType.getName()).orElseGet(()-> {
+                accountTypeRepo.findByNameAndCreatedUserId(
+                        predefinedAccountType.getName(),
+                        null).orElseGet(()-> {
                     AccountType type = new AccountType();
                     type.setName(predefinedAccountType.getName());
                     type.setDescription(predefinedAccountType.getDescription());

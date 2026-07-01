@@ -1,6 +1,8 @@
 package com.khata.staff.employee.service;
 
 import com.khata.staff.employee.entity.Employee;
+import com.khata.staff.employee.entity.EmployeeDepartment;
+import com.khata.staff.employee.entity.enums.EmployeePaymentType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
@@ -27,7 +29,7 @@ public class EmployeeExcelExportService {
             "Joining Date (Nepali)",
             "Joining Date (English)",
             "Active",
-            "Departments"
+            "Department Assignments"
     };
 
     public byte[] exportEmployees(List<Employee> employees) {
@@ -69,7 +71,7 @@ public class EmployeeExcelExportService {
             row.createCell(4).setCellValue(employee.getJoiningDateInNepali());
             row.createCell(5).setCellValue(employee.getJoiningDateInEnglish().toString());
             row.createCell(6).setCellValue(Boolean.TRUE.equals(employee.getActive()) ? "Yes" : "No");
-            row.createCell(7).setCellValue(formatDepartmentNames(employee));
+            row.createCell(7).setCellValue(formatDepartmentAssignments(employee));
         }
     }
 
@@ -79,9 +81,19 @@ public class EmployeeExcelExportService {
         }
     }
 
-    private String formatDepartmentNames(Employee employee) {
-        return employee.getDepartments().stream()
-                .map(employeeDepartment -> employeeDepartment.getDepartment().getDepartmentName())
+    private String formatDepartmentAssignments(Employee employee) {
+        return employee.getDepartmentAssignments().stream()
+                .map(employeeDepartment -> employeeDepartment.getDepartment().getDepartmentName()
+                        + " - " + resolvePaymentType(employeeDepartment))
                 .collect(Collectors.joining(", "));
+    }
+
+    private EmployeePaymentType resolvePaymentType(EmployeeDepartment employeeDepartment) {
+        if (employeeDepartment.getPaymentType() != null) {
+            return employeeDepartment.getPaymentType();
+        }
+        return Boolean.TRUE.equals(employeeDepartment.getDepartment().getPieceRateEnabled())
+                ? EmployeePaymentType.PIECE_RATE
+                : EmployeePaymentType.MONTHLY;
     }
 }

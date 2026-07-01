@@ -1,14 +1,16 @@
 package com.khata.staff.employee.service.impl;
 
 import com.khata.auth.service.UserService;
+import com.khata.exceptions.BadRequestException;
 import com.khata.exceptions.ResourceAlreadyExistsException;
 import com.khata.exceptions.ResourceNotFoundException;
 import com.khata.settings.department.entity.Department;
 import com.khata.settings.department.repositories.DepartmentRepo;
+import com.khata.staff.employee.dto.EmployeeDepartmentAssignmentDTO;
 import com.khata.staff.employee.dto.EmployeeDTO;
-import com.khata.staff.employee.dto.EmployeeDepartmentDTO;
 import com.khata.staff.employee.entity.Employee;
 import com.khata.staff.employee.entity.EmployeeDepartment;
+import com.khata.staff.employee.entity.enums.EmployeePaymentType;
 import com.khata.staff.employee.repositories.EmployeeRepo;
 import com.khata.staff.employee.service.EmployeeExcelExportService;
 import com.khata.staff.employee.service.EmployeeService;
@@ -22,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -33,6 +36,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EmployeeServiceImpl implements EmployeeService {
 
+    private static final String DEFAULT_EMPLOYEE_CODE_PREFIX = "EMP";
+    private static final int PADDED_EMPLOYEE_CODE_SUFFIX_LIMIT = 999;
+
     private final EmployeeRepo employeeRepo;
     private final DepartmentRepo departmentRepo;
     private final EmployeeExcelExportService employeeExcelExportService;
@@ -42,13 +48,14 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Transactional
     public EmployeeDTO createEmployee(EmployeeDTO employeeDTO) {
         Integer currentUserId = userService.getCurrentUserId();
-        validateEmployeeCodeIsUnique(employeeDTO.getEmployeeCode(), null, currentUserId);
         validatePhoneNumberIsUnique(employeeDTO.getPhoneNumber(), null, currentUserId);
-        validateDuplicateDepartmentsInRequest(employeeDTO.getDepartments());
+        validateDepartmentAssignments(employeeDTO.getDepartmentAssignments(), currentUserId);
 
         Employee employee = new Employee();
         employee.setCreatedUserId(currentUserId);
+        employee.setEmployeeCode(generateEmployeeCode(employeeDTO.getFullName(), currentUserId));
         setEmployeeFields(employee, employeeDTO);
+        addDepartmentAssignments(employee, employeeDTO.getDepartmentAssignments(), currentUserId);
 
         Employee savedEmployee = employeeRepo.save(employee);
         log.info("Employee created | id={} | code={}", savedEmployee.getId(), savedEmployee.getEmployeeCode());
@@ -60,18 +67,11 @@ public class EmployeeServiceImpl implements EmployeeService {
     public EmployeeDTO updateEmployee(Integer employeeId, EmployeeDTO employeeDTO) {
         Integer currentUserId = userService.getCurrentUserId();
         Employee employee = getEmployeeEntityById(employeeId, currentUserId);
-        validateEmployeeCodeIsUnique(employeeDTO.getEmployeeCode(), employeeId, currentUserId);
         validatePhoneNumberIsUnique(employeeDTO.getPhoneNumber(), employeeId, currentUserId);
-        validateDuplicateDepartmentsInRequest(employeeDTO.getDepartments());
+        validateDepartmentAssignments(employeeDTO.getDepartmentAssignments(), currentUserId);
 
-        employee.setEmployeeCode(employeeDTO.getEmployeeCode());
-        employee.setFullName(employeeDTO.getFullName());
-        employee.setPhoneNumber(employeeDTO.getPhoneNumber());
-        employee.setAddress(employeeDTO.getAddress());
-        employee.setJoiningDateInNepali(employeeDTO.getJoiningDateInNepali());
-        employee.setJoiningDateInEnglish(employeeDTO.getJoiningDateInEnglish());
-        employee.setActive(employeeDTO.getActive() == null || employeeDTO.getActive());
-        syncDepartments(employee, employeeDTO.getDepartments());
+        setEmployeeFields(employee, employeeDTO);
+        syncDepartmentAssignments(employee, employeeDTO.getDepartmentAssignments(), currentUserId);
 
         Employee updatedEmployee = employeeRepo.save(employee);
         log.info("Employee updated | id={}", employeeId);
@@ -121,48 +121,72 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     private void setEmployeeFields(Employee employee, EmployeeDTO employeeDTO) {
-        employee.setEmployeeCode(employeeDTO.getEmployeeCode());
         employee.setFullName(employeeDTO.getFullName());
         employee.setPhoneNumber(employeeDTO.getPhoneNumber());
         employee.setAddress(employeeDTO.getAddress());
         employee.setJoiningDateInNepali(employeeDTO.getJoiningDateInNepali());
         employee.setJoiningDateInEnglish(employeeDTO.getJoiningDateInEnglish());
         employee.setActive(employeeDTO.getActive() == null || employeeDTO.getActive());
-        employeeDTO.getDepartments().forEach(departmentDTO ->
-                employee.getDepartments().add(buildEmployeeDepartment(employee, departmentDTO)));
     }
 
-    private EmployeeDepartment buildEmployeeDepartment(Employee employee, EmployeeDepartmentDTO departmentDTO) {
-        Department department = getDepartmentEntityById(departmentDTO.getDepartmentId());
-        EmployeeDepartment employeeDepartment = new EmployeeDepartment();
-        employeeDepartment.setEmployee(employee);
-        employeeDepartment.setDepartment(department);
-        return employeeDepartment;
+    private void addDepartmentAssignments(
+            Employee employee,
+            List<EmployeeDepartmentAssignmentDTO> assignmentDTOs,
+            Integer currentUserId) {
+        assignmentDTOs.forEach(assignmentDTO ->
+                employee.getDepartmentAssignments().add(
+                        buildEmployeeDepartmentAssignment(employee, assignmentDTO, currentUserId)));
     }
 
-    private void syncDepartments(Employee employee, List<EmployeeDepartmentDTO> departmentDTOs) {
-        Set<Integer> requestedDepartmentIds = departmentDTOs.stream()
-                .map(EmployeeDepartmentDTO::getDepartmentId)
+    private EmployeeDepartment buildEmployeeDepartmentAssignment(
+            Employee employee,
+            EmployeeDepartmentAssignmentDTO assignmentDTO,
+            Integer currentUserId) {
+        Department department = getDepartmentEntityById(assignmentDTO.getDepartmentId(), currentUserId);
+        EmployeeDepartment assignment = new EmployeeDepartment();
+        assignment.setEmployee(employee);
+        assignment.setDepartment(department);
+        setAssignmentFields(assignment, assignmentDTO);
+        return assignment;
+    }
+
+    private void syncDepartmentAssignments(
+            Employee employee,
+            List<EmployeeDepartmentAssignmentDTO> assignmentDTOs,
+            Integer currentUserId) {
+        Set<Integer> requestedDepartmentIds = assignmentDTOs.stream()
+                .map(EmployeeDepartmentAssignmentDTO::getDepartmentId)
                 .collect(Collectors.toSet());
 
-        Iterator<EmployeeDepartment> iterator = employee.getDepartments().iterator();
+        Iterator<EmployeeDepartment> iterator = employee.getDepartmentAssignments().iterator();
         while (iterator.hasNext()) {
-            EmployeeDepartment existingDepartment = iterator.next();
-            if (!requestedDepartmentIds.contains(existingDepartment.getDepartment().getId())) {
+            EmployeeDepartment existingAssignment = iterator.next();
+            if (!requestedDepartmentIds.contains(existingAssignment.getDepartment().getId())) {
                 iterator.remove();
             }
         }
 
-        Map<Integer, EmployeeDepartment> existingDepartmentsById = employee.getDepartments().stream()
+        Map<Integer, EmployeeDepartment> existingAssignmentsByDepartmentId = employee.getDepartmentAssignments().stream()
                 .collect(Collectors.toMap(
                         employeeDepartment -> employeeDepartment.getDepartment().getId(),
                         Function.identity()));
 
-        for (EmployeeDepartmentDTO departmentDTO : departmentDTOs) {
-            if (!existingDepartmentsById.containsKey(departmentDTO.getDepartmentId())) {
-                employee.getDepartments().add(buildEmployeeDepartment(employee, departmentDTO));
+        for (EmployeeDepartmentAssignmentDTO assignmentDTO : assignmentDTOs) {
+            EmployeeDepartment existingAssignment = existingAssignmentsByDepartmentId.get(assignmentDTO.getDepartmentId());
+            if (existingAssignment == null) {
+                employee.getDepartmentAssignments().add(
+                        buildEmployeeDepartmentAssignment(employee, assignmentDTO, currentUserId));
+            } else {
+                setAssignmentFields(existingAssignment, assignmentDTO);
             }
         }
+    }
+
+    private void setAssignmentFields(EmployeeDepartment assignment, EmployeeDepartmentAssignmentDTO assignmentDTO) {
+        assignment.setPaymentType(assignmentDTO.getPaymentType());
+        assignment.setMonthlySalary(assignmentDTO.getPaymentType() == EmployeePaymentType.MONTHLY
+                ? assignmentDTO.getMonthlySalary()
+                : null);
     }
 
     private Employee getEmployeeEntityById(Integer employeeId, Integer currentUserId) {
@@ -171,17 +195,10 @@ public class EmployeeServiceImpl implements EmployeeService {
         );
     }
 
-    private Department getDepartmentEntityById(Integer departmentId) {
-        return departmentRepo.findById(departmentId).orElseThrow(
+    private Department getDepartmentEntityById(Integer departmentId, Integer currentUserId) {
+        return departmentRepo.findByIdAndCreatedUserId(departmentId, currentUserId).orElseThrow(
                 () -> new ResourceNotFoundException("Department", "id", departmentId)
         );
-    }
-
-    private void validateEmployeeCodeIsUnique(String employeeCode, Integer employeeId, Integer currentUserId) {
-        Optional<Employee> existingEmployee = employeeRepo.findByEmployeeCodeAndCreatedUserId(employeeCode, currentUserId);
-        if (existingEmployee.isPresent() && !existingEmployee.get().getId().equals(employeeId)) {
-            throw new ResourceAlreadyExistsException("Employee code", employeeCode);
-        }
     }
 
     private void validatePhoneNumberIsUnique(String phoneNumber, Integer employeeId, Integer currentUserId) {
@@ -191,12 +208,42 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
     }
 
-    private void validateDuplicateDepartmentsInRequest(List<EmployeeDepartmentDTO> departments) {
+    private String generateEmployeeCode(String fullName, Integer currentUserId) {
+        Integer maxSuffix = employeeRepo.findMaxEmployeeCodeSuffixByCreatedUserId(currentUserId);
+        int nextSuffix = (maxSuffix == null ? 0 : maxSuffix) + 1;
+        String suffix = nextSuffix <= PADDED_EMPLOYEE_CODE_SUFFIX_LIMIT
+                ? String.format("%03d", nextSuffix)
+                : String.valueOf(nextSuffix);
+        return getEmployeeCodePrefix(fullName) + "-" + suffix;
+    }
+
+    private String getEmployeeCodePrefix(String fullName) {
+        String firstWord = fullName.strip().split("\\s+")[0];
+        String prefix = firstWord.replaceAll("[^A-Za-z0-9]", "").toUpperCase(Locale.ROOT);
+        return prefix.isBlank() ? DEFAULT_EMPLOYEE_CODE_PREFIX : prefix;
+    }
+
+    private void validateDepartmentAssignments(List<EmployeeDepartmentAssignmentDTO> assignments, Integer currentUserId) {
         Set<Integer> departmentIds = new HashSet<>();
-        for (EmployeeDepartmentDTO department : departments) {
-            if (!departmentIds.add(department.getDepartmentId())) {
-                throw new ResourceAlreadyExistsException("Employee department", department.getDepartmentId());
+        for (EmployeeDepartmentAssignmentDTO assignment : assignments) {
+            if (!departmentIds.add(assignment.getDepartmentId())) {
+                throw new ResourceAlreadyExistsException("Employee department assignment", assignment.getDepartmentId());
             }
+            Department department = getDepartmentEntityById(assignment.getDepartmentId(), currentUserId);
+            validatePaymentFields(assignment, department);
+        }
+    }
+
+    private void validatePaymentFields(EmployeeDepartmentAssignmentDTO assignment, Department department) {
+        boolean pieceRateEnabled = Boolean.TRUE.equals(department.getPieceRateEnabled());
+        if (pieceRateEnabled && assignment.getPaymentType() != EmployeePaymentType.PIECE_RATE) {
+            throw new BadRequestException("Payment type must be PIECE_RATE for piece-rate enabled department.");
+        }
+        if (!pieceRateEnabled && assignment.getPaymentType() != EmployeePaymentType.MONTHLY) {
+            throw new BadRequestException("Payment type must be MONTHLY for department without piece rate enabled.");
+        }
+        if (!pieceRateEnabled && assignment.getMonthlySalary() == null) {
+            throw new BadRequestException("Monthly salary is required when payment type is MONTHLY.");
         }
     }
 
@@ -210,16 +257,29 @@ public class EmployeeServiceImpl implements EmployeeService {
         employeeDTO.setJoiningDateInNepali(employee.getJoiningDateInNepali());
         employeeDTO.setJoiningDateInEnglish(employee.getJoiningDateInEnglish());
         employeeDTO.setActive(employee.getActive());
-        employeeDTO.setDepartments(employee.getDepartments().stream()
-                .map(this::toEmployeeDepartmentDTO)
+        employeeDTO.setDepartmentAssignments(employee.getDepartmentAssignments().stream()
+                .map(this::toEmployeeDepartmentAssignmentDTO)
                 .toList());
         return employeeDTO;
     }
 
-    private EmployeeDepartmentDTO toEmployeeDepartmentDTO(EmployeeDepartment employeeDepartment) {
-        EmployeeDepartmentDTO departmentDTO = new EmployeeDepartmentDTO();
-        departmentDTO.setDepartmentId(employeeDepartment.getDepartment().getId());
-        departmentDTO.setDepartmentName(employeeDepartment.getDepartment().getDepartmentName());
-        return departmentDTO;
+    private EmployeeDepartmentAssignmentDTO toEmployeeDepartmentAssignmentDTO(EmployeeDepartment employeeDepartment) {
+        EmployeeDepartmentAssignmentDTO assignmentDTO = new EmployeeDepartmentAssignmentDTO();
+        assignmentDTO.setDepartmentId(employeeDepartment.getDepartment().getId());
+        assignmentDTO.setDepartmentName(employeeDepartment.getDepartment().getDepartmentName());
+        assignmentDTO.setPaymentType(resolvePaymentType(employeeDepartment));
+        assignmentDTO.setMonthlySalary(assignmentDTO.getPaymentType() == EmployeePaymentType.MONTHLY
+                ? employeeDepartment.getMonthlySalary()
+                : null);
+        return assignmentDTO;
+    }
+
+    private EmployeePaymentType resolvePaymentType(EmployeeDepartment employeeDepartment) {
+        if (employeeDepartment.getPaymentType() != null) {
+            return employeeDepartment.getPaymentType();
+        }
+        return Boolean.TRUE.equals(employeeDepartment.getDepartment().getPieceRateEnabled())
+                ? EmployeePaymentType.PIECE_RATE
+                : EmployeePaymentType.MONTHLY;
     }
 }

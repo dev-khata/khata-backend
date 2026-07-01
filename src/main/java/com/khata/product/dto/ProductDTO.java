@@ -1,5 +1,6 @@
 package com.khata.product.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -26,6 +27,7 @@ public class ProductDTO {
     @Size(max = 100, message = "Product name must be less than 100 characters")
     private String productName;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Integer createdUserId;
 
     @NotEmpty(message = "Department rates cannot be empty")

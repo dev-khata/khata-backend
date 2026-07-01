@@ -1,5 +1,6 @@
 package com.khata.settings.accountType.services.impl;
 
+import com.khata.auth.service.UserService;
 import com.khata.settings.accountType.dto.AccountTypeDTO;
 import com.khata.settings.accountType.entity.AccountType;
 import com.khata.settings.accountType.repositories.AccountTypeRepo;
@@ -22,21 +23,25 @@ public class AccountTypeServiceImpl implements AccountTypeService {
 
     private final AccountTypeRepo accountTypeRepo;
     private final ModelMapper modelMapper;
+    private final UserService userService;
 
-    public AccountTypeServiceImpl(AccountTypeRepo accountTypeRepo, ModelMapper modelMapper) {
+    public AccountTypeServiceImpl(AccountTypeRepo accountTypeRepo, ModelMapper modelMapper, UserService userService) {
         this.accountTypeRepo = accountTypeRepo;
         this.modelMapper = modelMapper;
+        this.userService = userService;
     }
 
     @Override
     @Transactional
     public AccountTypeDTO createAccountType(AccountTypeDTO accountTypeDTO) {
-        boolean exists = accountTypeRepo.existsByName(accountTypeDTO.getName());
+        Integer currentUserId = userService.getCurrentUserId();
+        boolean exists = accountTypeRepo.existsVisibleByName(accountTypeDTO.getName(), currentUserId);
         if (exists) {
             alreadyExists(accountTypeDTO.getName());
         }
 
         AccountType accountType = modelMapper.map(accountTypeDTO, AccountType.class);
+        accountType.setCreatedUserId(currentUserId);
         AccountType savedAccountType = accountTypeRepo.save(accountType);
         log.info("Account type created with name : {}", savedAccountType.getName());
         return modelMapper.map(savedAccountType, AccountTypeDTO.class);
@@ -45,11 +50,14 @@ public class AccountTypeServiceImpl implements AccountTypeService {
     @Override
     @Transactional
     public AccountTypeDTO updateAccountType(AccountTypeDTO accountTypeDTO, Integer accountTypeId) {
-        AccountType accountType = getAccountTypeEntityById(accountTypeId);
+        Integer currentUserId = userService.getCurrentUserId();
+        AccountType accountType = getAccountTypeEntityById(accountTypeId, currentUserId);
 
         checkIfSystemDefined(accountType, "updated");
 
-        Optional<AccountType> existingByName = accountTypeRepo.findByName(accountTypeDTO.getName());
+        Optional<AccountType> existingByName = accountTypeRepo.findVisibleByName(
+                accountTypeDTO.getName(),
+                currentUserId);
         if (existingByName.isPresent() && !existingByName.get().getId().equals(accountTypeId)) {
             alreadyExists(accountTypeDTO.getName());
         }
@@ -57,7 +65,6 @@ public class AccountTypeServiceImpl implements AccountTypeService {
         accountType.setName(accountTypeDTO.getName());
         accountType.setTransactionType(accountTypeDTO.getTransactionType());
         accountType.setDescription(accountTypeDTO.getDescription());
-        accountType.setSystemDefault(accountTypeDTO.isSystemDefault());
 
         AccountType updatedAccountType = accountTypeRepo.save(accountType);
         log.info("Account type updated with id : {}", accountTypeId);
@@ -67,28 +74,32 @@ public class AccountTypeServiceImpl implements AccountTypeService {
     @Override
     @Transactional(readOnly = true)
     public AccountTypeDTO getAccountTypeById(Integer accountTypeId) {
-        AccountType accountType = getAccountTypeEntityById(accountTypeId);
+        Integer currentUserId = userService.getCurrentUserId();
+        AccountType accountType = getAccountTypeEntityById(accountTypeId, currentUserId);
         return modelMapper.map(accountType, AccountTypeDTO.class);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<AccountTypeDTO> getAccountTypes(Pageable pageable) {
-        Page<AccountType> accountTypes = accountTypeRepo.findAll(pageable);
+        Integer currentUserId = userService.getCurrentUserId();
+        Page<AccountType> accountTypes = accountTypeRepo.findVisibleByCreatedUserId(currentUserId, pageable);
         return accountTypes.map(accountType -> modelMapper.map(accountType, AccountTypeDTO.class));
     }
 
     @Override
+    @Transactional
     public void deleteAccountType(Integer accountTypeId) {
-        AccountType accountType = getAccountTypeEntityById(accountTypeId);
+        Integer currentUserId = userService.getCurrentUserId();
+        AccountType accountType = getAccountTypeEntityById(accountTypeId, currentUserId);
         checkIfSystemDefined(accountType, "deleted");
         log.info("Account type deleted with id : {}", accountTypeId);
         accountTypeRepo.delete(accountType);
     }
 
-    private AccountType getAccountTypeEntityById(Integer accountTypeId) {
-        return accountTypeRepo.findById(accountTypeId).orElseThrow(
-                () -> new ResourceNotFoundException("AccountType with", "id", accountTypeId));
+    private AccountType getAccountTypeEntityById(Integer accountTypeId, Integer currentUserId) {
+        return accountTypeRepo.findVisibleById(accountTypeId, currentUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("AccountType with", "id", accountTypeId));
     }
 
     private void checkIfSystemDefined(AccountType accountType, String action) {
@@ -97,8 +108,7 @@ public class AccountTypeServiceImpl implements AccountTypeService {
         }
     }
 
-    private void alreadyExists(String name){
+    private void alreadyExists(String name) {
         throw new ResourceAlreadyExistsException("Account type", name);
     }
-
 }

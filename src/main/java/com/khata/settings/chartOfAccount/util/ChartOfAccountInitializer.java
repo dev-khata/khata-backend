@@ -17,14 +17,17 @@ public class ChartOfAccountInitializer {
     CommandLineRunner initChartOfAccounts(ChartOfAccountRepo chartOfAccountRepo, AccountTypeRepo accountTypeRepo){
         return args -> {
             for(DefaultChartOfAccounts preDefinedChartOfAccounts: DefaultChartOfAccounts.values()){
-                chartOfAccountRepo.findByName(preDefinedChartOfAccounts.getName()).orElseGet(() -> {
+                chartOfAccountRepo.findByNameAndCreatedUserId(
+                        preDefinedChartOfAccounts.getName(),
+                        null).orElseGet(() -> {
                     ChartOfAccount chartOfAccount = new ChartOfAccount();
                     chartOfAccount.setName(preDefinedChartOfAccounts.getName());
                     chartOfAccount.setDescription(preDefinedChartOfAccounts.getDescription());
 
                     // Lookup AccountType entity by enum name
-                    AccountType accountType = accountTypeRepo.findByName(
-                            preDefinedChartOfAccounts.getDefaultAccountType().getName()
+                    AccountType accountType = accountTypeRepo.findByNameAndCreatedUserId(
+                            preDefinedChartOfAccounts.getDefaultAccountType().getName(),
+                            null
                     ).orElseThrow(() -> new RuntimeException("Account type not found"));
                     chartOfAccount.setAccountType(accountType);
 
