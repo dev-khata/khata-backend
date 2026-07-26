@@ -66,7 +66,7 @@ public class ProductionLot {
     private String startDateInNepali;
 
     @Column(nullable = false, length = 100)
-    private String currentStage = "Cutting Master";
+    private String currentStage = "Pending";
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)

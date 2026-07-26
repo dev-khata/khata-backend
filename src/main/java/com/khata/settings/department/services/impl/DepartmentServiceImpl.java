@@ -1,8 +1,10 @@
 package com.khata.settings.department.services.impl;
 
 import com.khata.auth.service.UserService;
+import com.khata.exceptions.BadRequestException;
 import com.khata.exceptions.ResourceAlreadyExistsException;
 import com.khata.exceptions.ResourceNotFoundException;
+import com.khata.inventory.productionLots.repositories.ProductionStageDepartmentMappingRepo;
 import com.khata.settings.department.dto.DepartmentDTO;
 import com.khata.settings.department.entity.Department;
 import com.khata.settings.department.repositories.DepartmentRepo;
@@ -23,6 +25,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     private final DepartmentRepo departmentRepo;
     private final UserService userService;
+    private final ProductionStageDepartmentMappingRepo productionStageDepartmentMappingRepo;
 
     @Override
     @Transactional
@@ -83,6 +86,10 @@ public class DepartmentServiceImpl implements DepartmentService {
     public void deleteDepartment(Integer departmentId) {
         Integer currentUserId = userService.getCurrentUserId();
         Department department = getDepartmentEntityById(departmentId, currentUserId);
+        if (productionStageDepartmentMappingRepo.existsByDepartmentIdAndCreatedUserId(departmentId, currentUserId)) {
+            throw new BadRequestException(
+                    "Department is used in production stage mappings. Remove the mapping before deleting it.");
+        }
         departmentRepo.delete(department);
         log.info("Department deleted with id : {}", departmentId);
     }

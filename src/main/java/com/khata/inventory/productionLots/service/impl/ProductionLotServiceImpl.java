@@ -9,6 +9,7 @@ import com.khata.inventory.productionLots.dto.ProductionLotDTO;
 import com.khata.inventory.productionLots.entity.ProductionLot;
 import com.khata.inventory.productionLots.entity.ProductionLotAllocation;
 import com.khata.inventory.productionLots.entity.ProductionLotStockIssue;
+import com.khata.inventory.productionLots.entity.ProductionStage;
 import com.khata.inventory.productionLots.repositories.ProductionLotRepo;
 import com.khata.inventory.productionLots.service.ProductionLotService;
 import com.khata.inventory.rawMaterial.entity.RawMaterial;
@@ -29,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -42,6 +44,7 @@ public class ProductionLotServiceImpl implements ProductionLotService {
     private final RawMaterialRepo rawMaterialRepo;
     private final RawMaterialStockBatchRepo rawMaterialStockBatchRepo;
     private final ProductRepo productRepo;
+    private final ProductionStageFlowResolver stageFlowResolver;
     private final FiscalYearService fiscalYearService;
     private final NepaliDateConversionService nepaliDateConversionService;
     private final UserService userService;
@@ -69,6 +72,7 @@ public class ProductionLotServiceImpl implements ProductionLotService {
 
         productionLotDTO.getAllocations().forEach(allocationDTO ->
                 productionLot.getAllocations().add(buildAllocation(productionLot, allocationDTO, currentUserId)));
+        initializeProductionLotCurrentStage(productionLot);
         issueRawMaterialStock(productionLot, currentUserId);
 
         ProductionLot savedProductionLot = productionLotRepo.save(productionLot);
@@ -104,6 +108,7 @@ public class ProductionLotServiceImpl implements ProductionLotService {
 
         productionLotDTO.getAllocations().forEach(allocationDTO ->
                 productionLot.getAllocations().add(buildAllocation(productionLot, allocationDTO, currentUserId)));
+        initializeProductionLotCurrentStage(productionLot);
         issueRawMaterialStock(productionLot, currentUserId);
 
         ProductionLot updatedProductionLot = productionLotRepo.save(productionLot);
@@ -220,7 +225,19 @@ public class ProductionLotServiceImpl implements ProductionLotService {
         ProductionLotAllocation allocation = new ProductionLotAllocation();
         allocation.setProductionLot(productionLot);
         allocation.setProduct(product);
+        stageFlowResolver.getConfiguredProductFlow(product, currentUserId).stream()
+                .findFirst()
+                .ifPresent(allocation::setCurrentStage);
         return allocation;
+    }
+
+    private void initializeProductionLotCurrentStage(ProductionLot productionLot) {
+        productionLot.getAllocations().stream()
+                .map(ProductionLotAllocation::getCurrentStage)
+                .filter(stage -> stage != null)
+                .min(Comparator.comparing(ProductionStage::getDisplayOrder).thenComparing(ProductionStage::getId))
+                .map(ProductionStage::getStageName)
+                .ifPresentOrElse(productionLot::setCurrentStage, () -> productionLot.setCurrentStage("Pending"));
     }
 
     private RawMaterial getRawMaterialEntityById(Integer materialId, Integer currentUserId) {
@@ -288,6 +305,13 @@ public class ProductionLotServiceImpl implements ProductionLotService {
         allocationDTO.setProductId(product.getId());
         allocationDTO.setProductCode(product.getProductCode());
         allocationDTO.setProductName(product.getProductName());
+        allocationDTO.setStatus(allocation.getStatus().getLabel());
+        if (allocation.getCurrentStage() != null) {
+            allocationDTO.setCurrentStageId(allocation.getCurrentStage().getId());
+            allocationDTO.setCurrentStageName(allocation.getCurrentStage().getStageName());
+        }
+        allocationDTO.setCompleteDateInEnglish(allocation.getCompleteDateInEnglish());
+        allocationDTO.setCompleteDateInNepali(allocation.getCompleteDateInNepali());
         return allocationDTO;
     }
 }
